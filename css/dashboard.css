@@ -1,0 +1,165 @@
+
+/* --- DASHBOARD STYLES --- */
+
+/* 1. Layout Wrapper */
+#wrapper {
+    overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem;
+    transition: margin 0.25s ease-out;
+    width: 15rem;
+    position: fixed; /* Cố định sidebar */
+    z-index: 1000;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+}
+
+#sidebar-wrapper .list-group {
+    width: 15rem;
+}
+
+#page-content-wrapper {
+    min-width: 100vw;
+    margin-left: 0;
+    transition: margin 0.25s ease-out;
+    padding-left: 0; /* Ban đầu full màn hình trên mobile */
+}
+
+/* Logic hiển thị Sidebar trên Desktop */
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0; /* Hiện sidebar */
+    }
+
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+        margin-left: 15rem; /* Đẩy nội dung sang phải */
+        padding-left: 0;
+    }
+
+    /* Khi bấm toggle để ẩn sidebar */
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -15rem;
+    }
+
+    #wrapper.toggled #page-content-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* 2. Menu Link Styles */
+.list-group-item {
+    border: none;
+    padding: 20px 30px;
+    font-weight: 500;
+}
+
+.list-group-item.active {
+    background-color: transparent;
+    color: var(--primary-color);
+    font-weight: bold;
+    border-right: 4px solid var(--primary-color); /* Vạch màu tím bên phải */
+}
+
+.list-group-item-action:hover {
+    color: var(--primary-color);
+    background-color: rgba(109, 40, 217, 0.05); /* Hover tím nhạt */
+}
+
+/* 3. Dashboard Colors & Cards */
+.logo-icon-sm {
+    width: 30px;
+    height: 30px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Đường viền màu bên trái Card */
+.border-left-purple { border-left: 5px solid var(--primary-color); }
+.border-left-pink { border-left: 5px solid var(--accent-color); }
+.border-left-blue { border-left: 5px solid #3b82f6; }
+
+/* Nền nhạt cho các box thống kê nhỏ */
+.bg-light-purple { background-color: rgba(109, 40, 217, 0.1); }
+.bg-light-pink { background-color: rgba(255, 71, 133, 0.1); }
+
+/* Table */
+.table-hover tbody tr:hover {
+    background-color: rgba(109, 40, 217, 0.02);
+}
+
+/* Hiệu ứng hover cho danh sách giao dịch */
+.hover-bg-light {
+    transition: background-color 0.2s ease;
+}
+
+.hover-bg-light:hover {
+    background-color: #b5bbc0; /* Màu xám rất nhạt */
+    cursor: pointer;
+}
+
+/* Nút Chi tiết chỉ hiện rõ hơn khi hover vào dòng đó (Tùy chọn) */
+.hover-bg-light:hover .btn-light {
+    background-color: #e9ecef;
+    color: var(--primary-color) !important;
+}
+
+
+/* --- PROFILE PAGE STYLES --- */
+
+/* Nút camera upload ảnh */
+.cursor-pointer { cursor: pointer; }
+
+.hover-purple {
+    transition: all 0.2s;
+}
+
+.hover-purple:hover {
+    background-color: var(--bg-light) !important;
+    transform: scale(1.1);
+}
+
+/* Các ô input readonly (không sửa được) sẽ có màu xám nhạt */
+.form-control[readonly] {
+    background-color: #f8f9fa; 
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Form switch toggle (Bảo mật 2 lớp) */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+
+/* Badge chọn số tiền nhanh */
+.hover-purple {
+    transition: all 0.2s;
+}
+
+.hover-purple:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Modal xác nhận */
+.modal-content {
+    box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+}
+
+

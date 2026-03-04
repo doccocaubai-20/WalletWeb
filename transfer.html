@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển tiền - NovaPay</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="bg-light">
+
+    <div class="d-flex" id="wrapper">
+        
+        <div class="bg-white border-end" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 primary-text fs-4 fw-bold border-bottom">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <div class="logo-icon-sm" style="width: 32px; height: 32px; background: #6d28d9; color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px;">N</div>
+                    <span class="text-purple">NovaPay</span>
+                </div>
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="dashboard.html" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                    <i class="bi bi-wallet2 me-2"></i>Tổng quan ví
+                </a>
+                <a href="transfer.html" class="list-group-item list-group-item-action bg-transparent second-text active">
+                    <i class="bi bi-send me-2"></i>Chuyển tiền
+                </a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                    <i class="bi bi-phone me-2"></i>Nạp tiền ĐT
+                </a>
+                <a href="dashboard.html#recent-transactions" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                    <i class="bi bi-clock-history me-2"></i>Lịch sử GD
+                </a>
+                <a href="profile.html" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                    <i class="bi bi-gear-fill me-2"></i>Cài đặt
+                </a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper">
+            
+            <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 px-4 border-bottom">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-list fs-4 me-3" id="menu-toggle" style="cursor: pointer;"></i>
+                    <h4 class="m-0 fw-bold">Chuyển tiền nhanh</h4>
+                </div>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-3">
+                        <li class="nav-item d-none d-md-flex align-items-center me-3">
+                            <div class="bg-light rounded-pill px-3 py-1 border d-flex align-items-center gap-2">
+                                <i class="bi bi-wallet2 text-muted"></i>
+                                <span class="fw-bold text-dark">2,000,000 đ</span>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <img src="https://i.pravatar.cc/150?img=11" class="rounded-circle border" width="40" height="40" alt="Avatar">
+                                <span class="fw-bold text-dark d-none d-md-block">Huy Le</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2">
+                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="login.html">Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-4">
+                <div class="row g-4">
+                    
+                    <div class="col-lg-8">
+                        <div class="bg-white rounded-4 shadow-sm p-4 h-100">
+                            <h5 class="fw-bold mb-4">Thông tin giao dịch</h5>
+                            
+                            <form>
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-muted">Nguồn tiền</label>
+                                    <div class="d-flex align-items-center p-3 border rounded-3 bg-light">
+                                        <div class="rounded-circle bg-white p-2 border me-3">
+                                            <i class="bi bi-wallet2 text-purple fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block fw-bold text-dark">22220072005</span>
+                                            <small class="text-muted">Số dư: <span class="text-purple fw-bold">2,000,000 đ</span></small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-muted">Đến tài khoản</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person-circle"></i></span>
+                                        <input type="tel" class="form-control border-start-0 ps-0" id="phoneInput" placeholder="Nhập STK người nhận...." required>
+                                        <button class="btn btn-outline-secondary border-start-0" type="button"><i class="bi bi-person-lines-fill"></i></button>
+                                    </div>
+                                    <div id="receiverName" class="mt-2 text-success fw-bold small" style="display: none;">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Người nhận: Mai Anh Hoàng
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-muted">Số tiền muốn chuyển</label>
+                                    <div class="input-group input-group-lg">
+                                        <input type="number" class="form-control fw-bold text-purple fs-4" placeholder="0" min="1000" step="1000">
+                                        <span class="input-group-text bg-light fw-bold">VND</span>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-3 overflow-auto">
+                                        <span class="badge bg-light text-dark border p-2 cursor-pointer hover-purple" onclick="setAmount(50000)">50,000</span>
+                                        <span class="badge bg-light text-dark border p-2 cursor-pointer hover-purple" onclick="setAmount(100000)">100,000</span>
+                                        <span class="badge bg-light text-dark border p-2 cursor-pointer hover-purple" onclick="setAmount(200000)">200,000</span>
+                                        <span class="badge bg-light text-dark border p-2 cursor-pointer hover-purple" onclick="setAmount(500000)">500,000</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-muted">Lời nhắn (Không bắt buộc)</label>
+                                    <div class="bg-light p-3 rounded-3 position-relative">
+                                        <textarea class="form-control bg-transparent border-0 shadow-none p-0" rows="2" placeholder="Chuyen tien an trua..."></textarea>
+                                        <i class="bi bi-pencil-fill position-absolute bottom-0 end-0 m-3 text-muted opacity-50"></i>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary-custom w-100 py-3 rounded-3 fw-bold shadow-sm fs-5" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                    Tiếp tục
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="bg-white rounded-4 shadow-sm p-4 h-100">
+                            <h5 class="fw-bold mb-4">Gần đây</h5>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                
+                                <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 hover-bg-light cursor-pointer" onclick="fillReceiver('0987654321', 'Mai Anh Hoàng')">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="https://i.pravatar.cc/150?img=3" class="rounded-circle" width="45" height="45">
+                                        <div>
+                                            <span class="fw-bold d-block text-dark">Mai Anh Hoàng</span>
+                                            <small class="text-muted">0987.654.321</small>
+                                        </div>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted small"></i>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 hover-bg-light cursor-pointer" onclick="fillReceiver('0912345678', 'Nông Mạnh Dũng')">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="https://i.pravatar.cc/150?img=5" class="rounded-circle" width="45" height="45">
+                                        <div>
+                                            <span class="fw-bold d-block text-dark">Nông Mạnh Dũng</span>
+                                            <small class="text-muted">0912.345.678</small>
+                                        </div>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted small"></i>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 hover-bg-light cursor-pointer" onclick="fillReceiver('0355588899', 'Phương Bảo Ngọc')">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="https://i.pravatar.cc/150?img=8" class="rounded-circle" width="45" height="45">
+                                        <div>
+                                            <span class="fw-bold d-block text-dark">Phương Bảo Ngọc</span>
+                                            <small class="text-muted">0355.588.899</small>
+                                        </div>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted small"></i>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Xác nhận giao dịch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="bg-light-purple rounded-circle d-inline-flex p-3 mb-3 text-purple">
+                        <i class="bi bi-shield-lock-fill fs-1"></i>
+                    </div>
+                    <p class="text-muted mb-4">Nhập mã PIN để tiếp tục.</p>
+                    <input type="password" class="form-control form-control-lg text-center fw-bold" placeholder="••••••" maxlength="6">
+                </div>
+                <div class="modal-footer border-top-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary-custom px-5 shadow">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle Sidebar
+        var el = document.getElementById("wrapper");
+        var toggleButton = document.getElementById("menu-toggle");
+        toggleButton.onclick = function () { el.classList.toggle("toggled"); };
+
+        // Hàm chọn nhanh người nhận từ danh sách
+        function fillReceiver(phone, name) {
+            document.getElementById('phoneInput').value = phone;
+            // Giả lập hiển thị tên người nhận sau khi nhập số
+            var nameDiv = document.getElementById('receiverName');
+            nameDiv.style.display = 'block';
+            nameDiv.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Người nhận: ' + name;
+        }
+
+        // Hàm chọn nhanh số tiền
+        function setAmount(amount) {
+            document.querySelector('input[type="number"]').value = amount;
+        }
+    </script>
+</body>
+</html>
