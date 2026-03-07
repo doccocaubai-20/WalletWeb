@@ -26,6 +26,10 @@ a {
     text-decoration: none;
 }
 
+.cursor-pointer {
+    cursor: pointer;
+}
+
 /* NAVBAR */
 .navbar {
     padding: 15px 0;
@@ -300,11 +304,9 @@ a {
     border-radius: 0.5rem;
 }
 
-.cursor-pointer {
-    cursor: pointer;
-}
 
-/* --- CSS CHO LAYOUT Ở GIỮA (CENTERED LAYOUT) --- */
+
+/* CSS CENTERED LAYOUT */
 
 .bg-soft-purple {
     background: linear-gradient(135deg, #f3f0ff 0%, #eef2ff 100%);

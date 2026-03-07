@@ -1,4 +1,3 @@
-
 /* --- DASHBOARD STYLES --- */
 
 /* 1. Layout Wrapper */
@@ -11,7 +10,7 @@
     margin-left: -15rem;
     transition: margin 0.25s ease-out;
     width: 15rem;
-    position: fixed; /* Cố định sidebar */
+    position: fixed; 
     z-index: 1000;
 }
 
@@ -28,23 +27,22 @@
     min-width: 100vw;
     margin-left: 0;
     transition: margin 0.25s ease-out;
-    padding-left: 0; /* Ban đầu full màn hình trên mobile */
+    padding-left: 0; 
 }
 
-/* Logic hiển thị Sidebar trên Desktop */
+/*  PC */
 @media (min-width: 768px) {
     #sidebar-wrapper {
-        margin-left: 0; /* Hiện sidebar */
+        margin-left: 0; 
     }
 
     #page-content-wrapper {
         min-width: 0;
         width: 100%;
-        margin-left: 15rem; /* Đẩy nội dung sang phải */
+        margin-left: 15rem;
         padding-left: 0;
     }
 
-    /* Khi bấm toggle để ẩn sidebar */
     #wrapper.toggled #sidebar-wrapper {
         margin-left: -15rem;
     }
@@ -65,12 +63,12 @@
     background-color: transparent;
     color: var(--primary-color);
     font-weight: bold;
-    border-right: 4px solid var(--primary-color); /* Vạch màu tím bên phải */
+    border-right: 4px solid var(--primary-color); 
 }
 
 .list-group-item-action:hover {
     color: var(--primary-color);
-    background-color: rgba(109, 40, 217, 0.05); /* Hover tím nhạt */
+    background-color: rgba(109, 40, 217, 0.05); 
 }
 
 /* 3. Dashboard Colors & Cards */
@@ -87,31 +85,37 @@
     font-size: 16px;
 }
 
-/* Đường viền màu bên trái Card */
-.border-left-purple { border-left: 5px solid var(--primary-color); }
-.border-left-pink { border-left: 5px solid var(--accent-color); }
-.border-left-blue { border-left: 5px solid #3b82f6; }
+.border-left-purple { 
+    border-left: 5px solid var(--primary-color); 
+}
+.border-left-pink { 
+    border-left: 5px solid var(--accent-color); 
+}
+.border-left-blue { 
+    border-left: 5px solid #3b82f6; 
+}
 
-/* Nền nhạt cho các box thống kê nhỏ */
-.bg-light-purple { background-color: rgba(109, 40, 217, 0.1); }
-.bg-light-pink { background-color: rgba(255, 71, 133, 0.1); }
+
+.bg-light-purple { 
+    background-color: rgba(109, 40, 217, 0.1); 
+}
+.bg-light-pink { 
+    background-color: rgba(255, 71, 133, 0.1); 
+}
 
 /* Table */
 .table-hover tbody tr:hover {
     background-color: rgba(109, 40, 217, 0.02);
 }
 
-/* Hiệu ứng hover cho danh sách giao dịch */
 .hover-bg-light {
     transition: background-color 0.2s ease;
 }
 
 .hover-bg-light:hover {
-    background-color: #b5bbc0; /* Màu xám rất nhạt */
-    cursor: pointer;
+    background-color: #b5bbc0; 
 }
 
-/* Nút Chi tiết chỉ hiện rõ hơn khi hover vào dòng đó (Tùy chọn) */
 .hover-bg-light:hover .btn-light {
     background-color: #e9ecef;
     color: var(--primary-color) !important;
@@ -119,9 +123,6 @@
 
 
 /* --- PROFILE PAGE STYLES --- */
-
-/* Nút camera upload ảnh */
-.cursor-pointer { cursor: pointer; }
 
 .hover-purple {
     transition: all 0.2s;
@@ -160,6 +161,44 @@
 /* Modal xác nhận */
 .modal-content {
     box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+}
+
+
+
+/* Style for Spotify Premium icon */
+.spotify-icon {
+    width: 50px;
+    height: 50px;
+    background: #1DB954;
+}
+
+/* Style for success badge */
+.success-badge {
+    font-size: 0.7rem;
+}
+
+/* Style for detail button */
+.detail-button {
+    font-size: 0.8rem;
+}
+
+/* Style for other icons */
+.icon-purple {
+    width: 50px;
+    height: 50px;
+    background: #6d28d9;
+}
+
+.icon-orange {
+    width: 50px;
+    height: 50px;
+    background: #ff9800;
+}
+
+.icon-red {
+    width: 50px;
+    height: 50px;
+    background: #ee4d2d;
 }
 
 
