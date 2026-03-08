@@ -10,7 +10,6 @@ import com.example.wallet.service.UserService;
 import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -62,13 +61,4 @@ public class UserController {
         return ResponseEntity.ok("OK");
     }
     
-    @PostMapping("/transfer")
-    public ResponseEntity<?> transferMoney(@RequestBody TransferDTO dto) {
-        return ResponseEntity.ok(userService.transferMoney(dto));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<UserAccount>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
 }

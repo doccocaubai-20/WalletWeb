@@ -8,15 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.wallet.dto.RegisterRequest;
-import com.example.wallet.dto.TransferDTO;
 import com.example.wallet.entity.Account;
 import com.example.wallet.entity.People;
-import com.example.wallet.entity.TransactionType;
-import com.example.wallet.entity.Transactions;
 import com.example.wallet.entity.UserAccount;
 import com.example.wallet.repository.AccountRepository;
 import com.example.wallet.repository.PeopleRepository;
-import com.example.wallet.repository.TransactionsRepository;
 import com.example.wallet.repository.UserAccountRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,13 +25,8 @@ public class UserService {
     private final UserAccountRepository userAccountRepository;
     private final PeopleRepository peopleRepository;
     private final AccountRepository accountRepository;
-    private final TransactionsRepository transactionsRepository;
-
     private final PasswordEncoder passwordEncoder;
 
-    public List<UserAccount> getAllUsers(){
-        return userAccountRepository.findAll();
-    }
 
 
     @Transactional
@@ -162,71 +153,4 @@ public class UserService {
         }
     }
 
-
-    @Transactional
-    public String transferMoney(TransferDTO dto) {
-        Account sender = accountRepository.findByAccountNumber(dto.getSenderAccountNumber())
-            .orElseThrow(() -> new RuntimeException("Ví gửi không tồn tại!"));
-
-        if (sender.getPin() == null || !sender.getPin().equals(dto.getPin())) {
-            throw new RuntimeException("INVALID_PIN");
-        }
-        if (sender.getBalance().compareTo(dto.getAmount()) < 0) {
-            throw new RuntimeException("INSUFFICIENT_BALANCE");
-        }
-
-        Account receiver = accountRepository.findByAccountNumber(dto.getReceiverAccountNumber())
-                .orElseThrow(() -> new RuntimeException("Ví nhận không tồn tại!"));
-
-
-        sender.setBalance(sender.getBalance().subtract(dto.getAmount()));
-        receiver.setBalance(receiver.getBalance().add(dto.getAmount()));
-        accountRepository.save(sender);
-        accountRepository.save(receiver);
-        
-        String code = "NP" + System.currentTimeMillis();
-        // 1. Lưu log cho NGƯỜI GỬI (Số tiền âm, TypeID = 1 cho Transfer)
-    saveTransactionRecord(sender, 
-                          dto.getAmount().negate(), 
-                          receiver.getAccountNumber(), 
-                          "Chuyển tiền: " + dto.getDescription(), 
-                          code, dto.getTransactionTypeId());
-
-    // 2. Lưu log cho NGƯỜI NHẬN (Số tiền dương, TypeID = 1 cho Transfer)
-    saveTransactionRecord(receiver, 
-                          dto.getAmount(), 
-                          sender.getAccountNumber(), 
-                          "Nhận tiền từ: " + sender.getAccountNumber(), 
-                          code, dto.getTransactionTypeId());
-
-        return "SUCCESS";
-    }
-
-
-
-    /**
-     * Hàm hỗ trợ lưu bản ghi giao dịch vào Database
-     * @param acc: Tài khoản thực hiện giao dịch
-     * @param amount: Số tiền (âm nếu là tiền ra, dương nếu là tiền vào)
-     * @param related: Số tài khoản đối ứng (người nhận hoặc người gửi)
-     * @param desc: Nội dung chi tiết giao dịch
-     */
-    private void saveTransactionRecord(Account acc, BigDecimal amount, 
-                                       String related, String desc, String code, Integer typeId) {
-
-        Transactions trans = new Transactions();
-        
-        trans.setAccount(acc);
-        trans.setAmount(amount);
-        trans.setBalanceAfter(acc.getBalance()); 
-        trans.setTransactionCode(code); 
-        trans.setRelatedParty(related);
-        trans.setDescription(desc);
-        trans.setStatus("SUCCESS");
-        TransactionType type = new TransactionType();
-        type.setTypeID(typeId);
-        trans.setTransactionType(type);
-
-        transactionsRepository.save(trans);
-    }
 }
