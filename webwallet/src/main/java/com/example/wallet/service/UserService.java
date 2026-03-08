@@ -1,13 +1,11 @@
 package com.example.wallet.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import com.example.wallet.dto.RegisterRequest;
 import com.example.wallet.dto.TransferDTO;
@@ -32,6 +30,9 @@ public class UserService {
     private final PeopleRepository peopleRepository;
     private final AccountRepository accountRepository;
     private final TransactionsRepository transactionsRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
     public List<UserAccount> getAllUsers(){
         return userAccountRepository.findAll();
     }
@@ -39,15 +40,6 @@ public class UserService {
 
     @Transactional
     public String register(RegisterRequest dto){
-        if (dto.getIdCard() == null || dto.getIdCard().trim().isEmpty()) {
-            throw new RuntimeException("Số CCCD không được để trống!");
-        }
-        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            throw new RuntimeException("Email không được để trống!");
-        }
-        if (dto.getPhoneNumber() == null || dto.getPhoneNumber().trim().isEmpty()) {
-            throw new RuntimeException("Số điện thoại không được để trống!");
-        }
 
         if (userAccountRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
@@ -75,7 +67,9 @@ public class UserService {
         UserAccount userAccount = new UserAccount();
         userAccount.setPeople(savedPeople);
         userAccount.setUsername(dto.getUsername());
-        userAccount.setPassword(dto.getPassword()); 
+
+        userAccount.setPassword(passwordEncoder.encode(dto.getPassword())); 
+
         userAccount.setRole("CUSTOMER");
         userAccount.setStatus("ACTIVE");
     
@@ -100,12 +94,18 @@ public class UserService {
         UserAccount user = userAccountRepository.findByUsername(username)
                         .orElseThrow(() -> new RuntimeException("Tên đăng nhập không tồn tại!"));
         
-        if (!user.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Mật khẩu sai!");
         }
 
         return user;
     }
+
+    public UserAccount getMyProfile(String username) {
+        return userAccountRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản!"));
+    }
+
 
     @Transactional
     public String updateProfile(Integer userID,RegisterRequest dto){
@@ -132,11 +132,12 @@ public class UserService {
         UserAccount user = userAccountRepository.findById(userID).
         orElseThrow(() -> new RuntimeException("Không tìm thấy ID"));
 
-        if (!user.getPassword().equals(oldPassword)){
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new RuntimeException("Mật khẩu cũ không chính xác!");
         }
 
-        user.setPassword(newPassword);
+        // Mã hóa và lưu mật khẩu mới
+        user.setPassword(passwordEncoder.encode(newPassword));
         userAccountRepository.save(user);
 
         return "Đổi mật khẩu thành công!";
@@ -189,14 +190,14 @@ public class UserService {
                           dto.getAmount().negate(), 
                           receiver.getAccountNumber(), 
                           "Chuyển tiền: " + dto.getDescription(), 
-                          code, 1);
+                          code, dto.getTransactionTypeId());
 
     // 2. Lưu log cho NGƯỜI NHẬN (Số tiền dương, TypeID = 1 cho Transfer)
     saveTransactionRecord(receiver, 
                           dto.getAmount(), 
                           sender.getAccountNumber(), 
                           "Nhận tiền từ: " + sender.getAccountNumber(), 
-                          code, 1);
+                          code, dto.getTransactionTypeId());
 
         return "SUCCESS";
     }

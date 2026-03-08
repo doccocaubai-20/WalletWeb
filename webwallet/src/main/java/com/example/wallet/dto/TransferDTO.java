@@ -11,4 +11,5 @@ public class TransferDTO {
     private BigDecimal amount;     
     private String description;
     private String pin;
+    private Integer transactionTypeId;
 }
