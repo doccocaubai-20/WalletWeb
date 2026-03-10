@@ -4,11 +4,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.wallet.dto.*;
+import com.example.wallet.entity.RefreshToken;
 import com.example.wallet.entity.UserAccount;
 import com.example.wallet.security.JwtUtils;
+import com.example.wallet.service.RefreshTokenService;
 import com.example.wallet.service.UserService;
+import org.springframework.web.bind.annotation.RequestBody;
 import lombok.RequiredArgsConstructor;
-import java.math.BigDecimal;
 import java.security.Principal;
 
 @RestController
@@ -17,6 +19,8 @@ import java.security.Principal;
 public class UserController {
 
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
+    
 
     private final JwtUtils jwtUtils;
 
@@ -26,12 +30,42 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> logEntity(@RequestBody UserAccount loginRequest) {
+    public ResponseEntity<?> authenticateUser(@RequestBody UserAccount loginRequest) {
         UserAccount user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
+
+        String accessToken = jwtUtils.generateToken(user.getUsername());
+      
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
         
-        String token = jwtUtils.generateToken(user.getUsername());
-        
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(new JwtResponse(accessToken, refreshToken.getToken()));
+    }
+
+    @PostMapping("refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequest request){
+        String requestRefreshToken = request.getRefreshToken();
+
+        // 1. Gọi Service để tìm Token
+        RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken);
+
+        // 2. Gọi Service để kiểm tra hạn sử dụng
+        refreshTokenService.verifyExpiration(refreshToken);
+
+        // 3. Lấy UserAccount từ Token hợp lệ
+        UserAccount user = refreshToken.getUserAccount();
+
+        // 4. Tạo Access Token mới
+        String newAccessToken = jwtUtils.generateToken(user.getUsername());
+
+        // 5. Trả về kết quả
+        return ResponseEntity.ok(new JwtResponse(newAccessToken, requestRefreshToken));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(Principal principal){
+        String username = principal.getName();
+
+        refreshTokenService.deleteByUsername(username);
+        return ResponseEntity.ok("Đăng xuất thành công!");
     }
 
     @GetMapping("/my-profile")
@@ -40,25 +74,23 @@ public class UserController {
     }
 
     @PutMapping("/my-profile")
-    public ResponseEntity<?> updateMyProfile(Principal principal, @RequestBody RegisterRequest dto) {
+    public ResponseEntity<?> updateMyProfile(Principal principal, @RequestBody UpdateProfileRequest dto) {
         UserAccount user = userService.getMyProfile(principal.getName());
         return ResponseEntity.ok(userService.updateProfile(user.getUserID(), dto));
     }
 
-    @PutMapping("/change-password/{userId}")
-    public ResponseEntity<?> changePassword(@PathVariable Integer userId, @RequestBody ChangePasswordDTO dto) {
-        return ResponseEntity.ok(userService.changePassword(userId, dto.getOldPassword(), dto.getNewPassword()));
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(Principal principal, @RequestBody ChangePasswordDTO dto) {
+        return ResponseEntity.ok(userService.changePassword(principal.getName(), dto.getOldPassword(), dto.getNewPassword()));
     }
 
-    @GetMapping("/verify-account/{accountNumber}")
-    public ResponseEntity<?> verifyAccount(@PathVariable String accountNumber) {
-        return ResponseEntity.ok(userService.getReceiverName(accountNumber));
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(userService.forgotPassword(request.getEmail()));
     }
-    
-    @GetMapping("/check-balance")
-    public ResponseEntity<?> checkBalance(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
-        userService.validateBalance(accountNumber, amount);
-        return ResponseEntity.ok("OK");
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(userService.resetPassword(request));
     }
-    
 }

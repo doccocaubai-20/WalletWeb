@@ -1,17 +1,24 @@
 package com.example.wallet.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.wallet.dto.RegisterRequest;
+import com.example.wallet.dto.ResetPasswordRequest;
+import com.example.wallet.dto.UpdateProfileRequest;
 import com.example.wallet.entity.Account;
+import com.example.wallet.entity.OtpToken;
 import com.example.wallet.entity.People;
 import com.example.wallet.entity.UserAccount;
 import com.example.wallet.repository.AccountRepository;
+import com.example.wallet.repository.OtpTokenRepository;
 import com.example.wallet.repository.PeopleRepository;
 import com.example.wallet.repository.UserAccountRepository;
 
@@ -26,8 +33,8 @@ public class UserService {
     private final PeopleRepository peopleRepository;
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
-
-
+    private final EmailService emailService;
+    private final OtpTokenRepository otpTokenRepository;    
 
     @Transactional
     public String register(RegisterRequest dto){
@@ -52,6 +59,7 @@ public class UserService {
         people.setEmail(dto.getEmail());
         people.setPhoneNumber(dto.getPhoneNumber());
         people.setAddress(dto.getAddress());
+        people.setGender(dto.getGender());
 
         People savedPeople = peopleRepository.save(people);
 
@@ -67,12 +75,7 @@ public class UserService {
         UserAccount savedAccount = userAccountRepository.save(userAccount);
 
         Account account = new Account();
-        String newAccountNumber;
-        do {
-            long randomNum = (long) (Math.random()* 9_000_000_000L) + 1_000_000_000L;
-            newAccountNumber = String.valueOf(randomNum);
-        }while (accountRepository.existsByAccountNumber(newAccountNumber));
-
+        String newAccountNumber = System.currentTimeMillis() + String.format("%03d", (int)(Math.random() * 1000));
         account.setAccountNumber(newAccountNumber);
         account.setUserAccount(savedAccount);
 
@@ -81,10 +84,10 @@ public class UserService {
         return "Đăng ký thành công!";
     }
 
-    public UserAccount login(String username,String password){
+    public UserAccount login(String username, String password) {
         UserAccount user = userAccountRepository.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("Tên đăng nhập không tồn tại!"));
-        
+                .orElseThrow(() -> new RuntimeException("Tên đăng nhập không tồn tại!"));
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Mật khẩu sai!");
         }
@@ -99,7 +102,7 @@ public class UserService {
 
 
     @Transactional
-    public String updateProfile(Integer userID,RegisterRequest dto){
+    public String updateProfile(Integer userID,UpdateProfileRequest dto){
         UserAccount user = userAccountRepository.findById(userID).
         orElseThrow(() ->  new RuntimeException("Không tìm thấy ID"));
         
@@ -113,15 +116,15 @@ public class UserService {
         people.setFullName(dto.getFullName());
         people.setAddress(dto.getAddress());
         people.setDateOfBirth(dto.getDateOfBirth());
-
+        people.setGender(dto.getGender());
         peopleRepository.save(people);
         return "Cập nhập thông tin cá nhân thành công!";
     }
 
     @Transactional
-    public String changePassword(Integer userID,String oldPassword,String newPassword){
-        UserAccount user = userAccountRepository.findById(userID).
-        orElseThrow(() -> new RuntimeException("Không tìm thấy ID"));
+    public String changePassword(String username,String oldPassword,String newPassword){
+        UserAccount user = userAccountRepository.findByUsername(username).
+        orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản!"));
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new RuntimeException("Mật khẩu cũ không chính xác!");
@@ -134,11 +137,7 @@ public class UserService {
         return "Đổi mật khẩu thành công!";
     }
 
-    public String getReceiverName(String accountNumber) {
-        return accountRepository.findByAccountNumberWithProfile(accountNumber)
-                .map(acc -> acc.getUserAccount().getPeople().getFullName())
-                .orElseThrow(() -> new RuntimeException("Số tài khoản không tồn tại!"));
-    }
+    
 
     public void validateBalance(String accountNumber, BigDecimal amount) {
         Account sender = accountRepository.findByAccountNumber(accountNumber)
@@ -153,4 +152,66 @@ public class UserService {
         }
     }
 
+
+    @Transactional
+    public String forgotPassword(String email) {
+
+        userAccountRepository.findByPeople_Email(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
+
+        Optional<OtpToken> lastTokenOpt = otpTokenRepository.findTopByEmailOrderByExpiryTimeDesc(email);
+        if (lastTokenOpt.isPresent()) {
+            OtpToken lastToken = lastTokenOpt.get();
+            if (lastToken.getExpiryTime().isAfter(LocalDateTime.now().plusMinutes(4))) {
+                throw new RuntimeException("Bạn thao tác quá nhanh. Vui lòng đợi 60 giây trước khi yêu cầu mã mới!");
+            }
+        }
+
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        
+        OtpToken otpToken = new OtpToken();
+        otpToken.setEmail(email);
+        otpToken.setOtpCode(otpCode);
+        otpToken.setExpiryTime(LocalDateTime.now().plusMinutes(5));
+        otpToken.setUsed(false);
+        otpToken.setFailedAttempts(0);  
+        otpTokenRepository.save(otpToken);
+
+        emailService.sendOtpEmail(email, otpCode);
+
+        return "Mã xác nhận đã được gửi đến email của bạn. Mã có hiệu lực trong 5 phút.";
+    }
+
+    @Transactional
+    public String resetPassword(ResetPasswordRequest dto) {
+        UserAccount user = userAccountRepository.findByPeople_Email(dto.getEmail())
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
+
+        OtpToken otpToken = otpTokenRepository.findTopByEmailAndIsUsedFalseOrderByExpiryTimeDesc(dto.getEmail())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy mã OTP hợp lệ cho email này!"));
+
+        if (!otpToken.getOtpCode().equals(dto.getOtp())) {
+        otpToken.setFailedAttempts(otpToken.getFailedAttempts() + 1);
+        int remaining = 5 - otpToken.getFailedAttempts();
+        
+        if (remaining <= 0) {
+            otpToken.setUsed(true);
+            otpTokenRepository.save(otpToken);
+            throw new RuntimeException("Bạn đã nhập sai 5 lần. Mã OTP đã bị hủy!");
+        }
+        
+        otpTokenRepository.save(otpToken);
+        throw new RuntimeException("Mã OTP không chính xác! Bạn còn " + remaining + " lần nhập.");
+    }
+
+        // Đổi mật khẩu
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userAccountRepository.save(user);
+
+        // Đánh dấu OTP đã sử dụng
+        otpToken.setUsed(true);
+        otpTokenRepository.save(otpToken);
+
+        return "Đặt lại mật khẩu thành công!";
+    }
 }

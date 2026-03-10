@@ -15,8 +15,8 @@ public class UserAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userID;
-
-    @Column(nullable = false, unique = true, length = 50)
+    
+    @Column(name = "Username", nullable = false, unique = true, length = 50)
     private String username;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

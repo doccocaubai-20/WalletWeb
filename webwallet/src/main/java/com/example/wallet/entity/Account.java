@@ -31,11 +31,10 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "UserID", referencedColumnName = "userID", nullable = false)
     private UserAccount userAccount;
-    
-    @Version
-    private Integer version = 0;
 
-    
+    @Version
+    private Long version;
+        
     @Column(length = 6)
     private String pin;
 }

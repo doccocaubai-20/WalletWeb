@@ -16,6 +16,8 @@ public class People {
 
     @Column(nullable = false, length = 100)
     private String fullName;
+    
+    private String gender;
 
     @Column(name = "IDCard", nullable = false, unique = true, length = 20)
     private String idCard;

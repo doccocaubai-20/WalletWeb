@@ -1,6 +1,9 @@
 package com.example.wallet.repository;
 
 import com.example.wallet.entity.Transactions;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +23,6 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Inte
            "AND t.amount < 0 " +
            "ORDER BY t.createdDate DESC")
     List<String> findRecentRecipients(@Param("accountNumber") String accountNumber);
+
+    Page<Transactions> findByAccount_AccountNumberOrderByTransIDDesc(String accountNumber,Pageable pageable);
 }

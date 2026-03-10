@@ -1,5 +1,6 @@
 package com.example.wallet.service;
 
+import com.example.wallet.dto.TransactionHistoryDTO;
 import com.example.wallet.dto.TransferDTO;
 import com.example.wallet.entity.Account;
 import com.example.wallet.entity.TransactionType;
@@ -11,6 +12,18 @@ import com.example.wallet.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +56,9 @@ public class TransactionService {
             throw new RuntimeException("INSUFFICIENT_BALANCE");
         }
 
+        if (dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) 
+            throw new RuntimeException("Số tiền không hợp lệ");
+
         Account receiver = accountRepository.findByAccountNumber(dto.getReceiverAccountNumber())
                 .orElseThrow(() -> new RuntimeException("Ví nhận không tồn tại!"));
 
@@ -51,7 +67,7 @@ public class TransactionService {
         accountRepository.save(sender);
         accountRepository.save(receiver);
         
-        String code = "NP" + System.currentTimeMillis();
+        String code = generateTransactionCode();
         
         saveTransactionRecord(sender, 
                               dto.getAmount().negate(), 
@@ -70,6 +86,16 @@ public class TransactionService {
         return "SUCCESS";
     }
 
+    private String generateTransactionCode() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String timeString = now.format(formatter);
+        
+        int randomNumber = 1000 + new Random().nextInt(9000);
+        
+        return "NP" + timeString + randomNumber;
+    }
     /**
      * Hàm hỗ trợ lưu bản ghi giao dịch vào Database
      * @param acc: Tài khoản thực hiện giao dịch
@@ -78,6 +104,7 @@ public class TransactionService {
      * @param desc: Nội dung chi tiết giao dịch
      */
     private void saveTransactionRecord(Account acc, BigDecimal amount, 
+
                                        String related, String desc, String code, Integer typeId) {
         Transactions trans = new Transactions();
         
@@ -95,4 +122,31 @@ public class TransactionService {
 
         transactionsRepository.save(trans);
     }
+
+    public Page<TransactionHistoryDTO> getHistory(String username, String accountNumber,int page,int size) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                        .orElseThrow( () -> new RuntimeException("Ví không tồn tại!"));
+        if ( !account.getUserAccount().getUsername().equals(username)) {
+            throw new RuntimeException("Bạn không có quyền xem ví này!");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Transactions> transactionPage = transactionsRepository.findByAccount_AccountNumberOrderByTransIDDesc(accountNumber,pageable);
+
+        return transactionPage.map( t -> {
+            TransactionHistoryDTO dto = new TransactionHistoryDTO();
+            dto.setTransactionCode(t.getTransactionCode());
+            dto.setAmount(t.getAmount());
+            dto.setBalanceAfter(t.getBalanceAfter());
+            dto.setRelatedParty(t.getRelatedParty());
+            dto.setDescription(t.getDescription());
+            dto.setStatus(t.getDescription());
+            dto.setType(t.getAmount().compareTo(BigDecimal.ZERO) > 0 ? "IN" : "OUT");
+            return dto;
+        });
+    }
+
+
+
 }
