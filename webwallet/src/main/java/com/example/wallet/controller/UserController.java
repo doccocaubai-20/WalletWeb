@@ -30,7 +30,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody UserAccount loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         UserAccount user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
 
         String accessToken = jwtUtils.generateToken(user.getUsername());
@@ -74,13 +74,13 @@ public class UserController {
     }
 
     @PutMapping("/my-profile")
-    public ResponseEntity<?> updateMyProfile(Principal principal, @RequestBody UpdateProfileRequest dto) {
+    public ResponseEntity<?> updateMyProfile(Principal principal, @Valid @RequestBody UpdateProfileRequest dto) {
         UserAccount user = userService.getMyProfile(principal.getName());
         return ResponseEntity.ok(userService.updateProfile(user.getUserID(), dto));
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<?> changePassword(Principal principal, @RequestBody ChangePasswordDTO dto) {
+    public ResponseEntity<?> changePassword(Principal principal, @Valid @RequestBody ChangePasswordDTO dto) {
         return ResponseEntity.ok(userService.changePassword(principal.getName(), dto.getOldPassword(), dto.getNewPassword()));
     }
 

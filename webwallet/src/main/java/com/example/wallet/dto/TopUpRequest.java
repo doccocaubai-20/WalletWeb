@@ -1,0 +1,25 @@
+package com.example.wallet.dto;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
+import lombok.Data;
+
+@Data
+public class TopUpRequest {
+
+    @NotBlank(message = "Số tài khoản không được để trống")
+    private String accountNumber;
+
+    @NotNull(message = "Ngân hàng liên kết không được để trống")
+    private Integer linkedBankId;
+
+    @NotNull(message = "Số tiền không được để trống")
+    @DecimalMin(value = "1.0", message = "Số tiền nạp tối thiểu là 1")
+    private BigDecimal amount;
+
+    @Size(max = 255, message = "Nội dung nạp tiền quá dài")
+    private String description;
+}
