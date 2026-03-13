@@ -2,6 +2,7 @@ package com.example.wallet.controller;
 
 import com.example.wallet.dto.LinkedBankRequest;
 import com.example.wallet.dto.LinkedBankResponse;
+import com.example.wallet.entity.Bank;
 import com.example.wallet.service.LinkedBankService;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -20,6 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class BankController {
 
     private final LinkedBankService linkedBankService;
+
+    @GetMapping("/supported")
+    public ResponseEntity<List<Bank>> getSupportedBanks() {
+        return ResponseEntity.ok(linkedBankService.getAllSupportedBanks());
+    }
 
     @GetMapping("/linked")
     public ResponseEntity<List<LinkedBankResponse>> getLinkedBanks(Principal principal) {

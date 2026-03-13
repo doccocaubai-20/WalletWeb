@@ -38,10 +38,12 @@ public class SecurityConfig {
                                  "/api/users/forgot-password",
                                  "/api/users/reset-password",
                                  "/api/test/**",
+                                 "/api/vnpay/**",
                                  "/v3/api-docs",
                                  "/v3/api-docs/**",
                                  "/swagger-ui/**",
-                                 "/swagger-ui.html").permitAll() // Cho phép truy cập không cần token
+                                 "/swagger-ui.html").permitAll() 
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated() // Cần token
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -26,13 +26,12 @@ public class RefreshTokenService {
         UserAccount user = userAccountRepository.findByUsername(username)
                             .orElseThrow( () -> new RuntimeException("Không tìm thấy user!"));
         
-        // Xóa token cũ của user này nếu có (mỗi user chỉ có 1 device đăng nhập tại 1 thời điểm)
-        refreshTokenRepository.deleteByUserAccount(user);
+        RefreshToken refreshToken = refreshTokenRepository.findByUserAccount(user)
+                                        .orElse(new RefreshToken());
 
-        RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUserAccount(user);
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        refreshToken.setToken(UUID.randomUUID().toString()); 
+        refreshToken.setToken(UUID.randomUUID().toString());
         
         return refreshTokenRepository.save(refreshToken);
     }

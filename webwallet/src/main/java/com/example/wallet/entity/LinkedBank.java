@@ -13,12 +13,10 @@ public class LinkedBank {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 100)
-    private String bankName;
-
-    @Column(nullable = false, length = 10)
-    private String bankCode;
-
+    @ManyToOne
+    @JoinColumn(name = "bank_id", nullable = false)
+    private Bank bank;
+    
     @Column(nullable = false, length = 30)
     private String accountNumber;
 

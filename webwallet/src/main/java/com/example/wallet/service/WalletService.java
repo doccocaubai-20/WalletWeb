@@ -46,7 +46,7 @@ public class WalletService {
 
         saveTransactionRecord(account,
                 request.getAmount(),
-                bank.getBankCode(),
+                bank.getBank().getBankCode(),
                 description,
                 code,
                 "TOPUP");
@@ -80,7 +80,7 @@ public class WalletService {
 
         saveTransactionRecord(account,
                 request.getAmount().negate(),
-                bank.getBankCode(),
+                bank.getBank().getBankCode(),
                 description,
                 code,
                 "WITHDRAW");
@@ -115,7 +115,7 @@ public class WalletService {
 
     private String buildDescription(String prefix, LinkedBank bank, String userDescription) {
         String masked = maskAccountNumber(bank.getAccountNumber());
-        String base = prefix + " " + bank.getBankName() + " (" + masked + ")";
+        String base = prefix + " " + bank.getBank().getBankName() + " (" + masked + ")";
         if (userDescription == null || userDescription.isBlank()) {
             return base;
         }

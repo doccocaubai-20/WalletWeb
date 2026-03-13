@@ -1,5 +1,16 @@
 package com.example.wallet.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.wallet.dto.TransactionHistoryDTO;
 import com.example.wallet.dto.TransferDTO;
 import com.example.wallet.entity.Account;
@@ -9,23 +20,8 @@ import com.example.wallet.entity.UserAccount;
 import com.example.wallet.repository.AccountRepository;
 import com.example.wallet.repository.TransactionsRepository;
 import com.example.wallet.repository.UserAccountRepository;
+
 import lombok.RequiredArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-import org.jspecify.annotations.Nullable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -141,7 +137,7 @@ public class TransactionService {
             dto.setBalanceAfter(t.getBalanceAfter());
             dto.setRelatedParty(t.getRelatedParty());
             dto.setDescription(t.getDescription());
-            dto.setStatus(t.getDescription());
+            dto.setStatus(t.getStatus());
             dto.setType(t.getAmount().compareTo(BigDecimal.ZERO) > 0 ? "IN" : "OUT");
             return dto;
         });
