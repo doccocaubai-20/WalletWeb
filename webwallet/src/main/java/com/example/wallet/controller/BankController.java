@@ -22,7 +22,7 @@ public class BankController {
 
     private final LinkedBankService linkedBankService;
 
-    @GetMapping("/supported")
+    @GetMapping
     public ResponseEntity<List<Bank>> getSupportedBanks() {
         return ResponseEntity.ok(linkedBankService.getAllSupportedBanks());
     }

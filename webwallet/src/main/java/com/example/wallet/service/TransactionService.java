@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.wallet.dto.TransactionHistoryDTO;
 import com.example.wallet.dto.TransferDTO;
@@ -30,8 +31,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final UserAccountRepository userAccountRepository;
     private final TransactionsRepository transactionsRepository;
-
-
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public String transferMoney(String currentUsername, TransferDTO dto) {
@@ -45,7 +45,7 @@ public class TransactionService {
             throw new RuntimeException("Lỗi bảo mật: Bạn không có quyền thao tác trên ví này!");
         }
 
-        if (sender.getPin() == null || !sender.getPin().equals(dto.getPin())) {
+        if (sender.getPin() == null || !passwordEncoder.matches(dto.getPin(), sender.getPin())) {
             throw new RuntimeException("INVALID_PIN");
         }
         if (sender.getBalance().compareTo(dto.getAmount()) < 0) {

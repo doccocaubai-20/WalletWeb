@@ -35,6 +35,6 @@ public class Account {
     @Version
     private Long version;
         
-    @Column(length = 6)
+    @Column(length = 255)
     private String pin;
 }

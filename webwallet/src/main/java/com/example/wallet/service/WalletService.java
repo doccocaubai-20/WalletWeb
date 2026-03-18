@@ -18,6 +18,7 @@ import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,7 @@ public class WalletService {
     private final LinkedBankRepository linkedBankRepository;
     private final TransactionsRepository transactionsRepository;
     private final TransactionTypeRepository transactionTypeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public TransactionResultResponse topUp(String username, TopUpRequest request) {
@@ -37,6 +39,10 @@ public class WalletService {
         LinkedBank bank = linkedBankRepository.findByIdAndUserAccount_Username(
                 request.getLinkedBankId(), username)
                 .orElseThrow(() -> new RuntimeException("Ngân hàng liên kết không tồn tại hoặc không thuộc quyền sở hữu của bạn!"));
+
+        if (account.getPin() == null || !passwordEncoder.matches(request.getPin(), account.getPin())) {
+            throw new RuntimeException("INVALID_PIN");
+        }
 
         account.setBalance(account.getBalance().add(request.getAmount()));
         accountRepository.save(account);
@@ -64,7 +70,7 @@ public class WalletService {
                 request.getLinkedBankId(), username)
                 .orElseThrow(() -> new RuntimeException("Ngân hàng liên kết không tồn tại hoặc không thuộc quyền sở hữu của bạn!"));
 
-        if (account.getPin() == null || !account.getPin().equals(request.getPin())) {
+        if (account.getPin() == null || !passwordEncoder.matches(request.getPin(), account.getPin())) {
             throw new RuntimeException("INVALID_PIN");
         }
 

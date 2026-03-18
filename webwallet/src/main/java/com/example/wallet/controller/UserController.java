@@ -93,4 +93,5 @@ public class UserController {
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(userService.resetPassword(request));
     }
+
 }

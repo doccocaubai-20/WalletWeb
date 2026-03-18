@@ -103,7 +103,7 @@ public class VNPayController {
 
         // Mã "00" nghĩa là thanh toán thành công
         if ("00".equals(responseCode)) {
-            long realAmount = Long.parseLong(amountStr) / 100; // VNPAY nhân 100 nên giờ phải chia lại
+            long realAmount = Long.parseLong(amountStr) / 100; 
             return "Giao dịch thành công! Bạn vừa nạp " + realAmount + " VNĐ.";
         } else {
             return "Giao dịch thất bại hoặc đã bị hủy!";

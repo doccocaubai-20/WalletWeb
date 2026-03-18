@@ -136,7 +136,29 @@ public class UserService {
         return "Đổi mật khẩu thành công!";
     }
 
-    
+    @Transactional
+    public void setAccountPin(String accountNumber, String pin) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản ngân hàng!"));
+
+        String encryptedPin = passwordEncoder.encode(pin);
+        account.setPin(encryptedPin);
+        accountRepository.save(account);
+    }
+
+    public boolean validatePassword(String username, String password) {
+        UserAccount user = userAccountRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản!"));
+
+        return passwordEncoder.matches(password, user.getPassword());
+    }
+
+    public boolean validateAccountPin(String accountNumber, String pin) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản ngân hàng!"));
+
+        return passwordEncoder.matches(pin, account.getPin());
+    }
 
     public void validateBalance(String accountNumber, BigDecimal amount) {
         Account sender = accountRepository.findByAccountNumber(accountNumber)
@@ -193,15 +215,15 @@ public class UserService {
         otpToken.setFailedAttempts(otpToken.getFailedAttempts() + 1);
         int remaining = 5 - otpToken.getFailedAttempts();
         
-        if (remaining <= 0) {
-            otpToken.setUsed(true);
-            otpTokenRepository.save(otpToken);
-            throw new RuntimeException("Bạn đã nhập sai 5 lần. Mã OTP đã bị hủy!");
-        }
+            if (remaining <= 0) {
+                otpToken.setUsed(true);
+                otpTokenRepository.save(otpToken);
+                throw new RuntimeException("Bạn đã nhập sai 5 lần. Mã OTP đã bị hủy!");
+            }
         
-        otpTokenRepository.save(otpToken);
-        throw new RuntimeException("Mã OTP không chính xác! Bạn còn " + remaining + " lần nhập.");
-    }
+            otpTokenRepository.save(otpToken);
+            throw new RuntimeException("Mã OTP không chính xác! Bạn còn " + remaining + " lần nhập.");
+        }
 
         // Đổi mật khẩu
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));

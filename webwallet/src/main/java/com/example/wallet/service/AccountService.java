@@ -41,4 +41,20 @@ public class AccountService {
                 .map(acc -> acc.getUserAccount().getPeople().getFullName())
                 .orElseThrow(() -> new RuntimeException("Số tài khoản không tồn tại!"));
     }
+
+    public Account getPrimaryAccount(String username) {
+        List<Account> accounts = accountRepository.findAllByUserAccount_Username(username);
+
+        if (accounts == null || accounts.isEmpty()) {
+            throw new RuntimeException("Tài khoản này chưa có ví!");
+        }
+        if (accounts.size() == 1) {
+            return accounts.get(0);
+        }
+
+        return accounts.stream()
+                .filter(acc -> "ACTIVE".equals(acc.getStatus()))
+                .findFirst()
+                .orElse(accounts.get(0)); 
+    }
 }

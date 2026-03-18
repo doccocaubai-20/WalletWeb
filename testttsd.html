@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaPay Dashboard Preview</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #6d28d9;
+            --accent-color: #ff4785;
+        }
+        body { background-color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; }
+        .text-purple { color: var(--primary-color) !important; }
+        
+        #wrapper { overflow-x: hidden; }
+        #sidebar-wrapper { min-height: 100vh; width: 250px; position: fixed; z-index: 1000; }
+        #page-content-wrapper { width: 100%; margin-left: 250px; padding-left: 0; }
+        
+        .list-group-item { border: none; padding: 15px 25px; font-weight: 500; }
+        .list-group-item.active { background-color: transparent; color: var(--primary-color); font-weight: bold; border-right: 4px solid var(--primary-color); }
+        .list-group-item-action:hover { color: var(--primary-color); background-color: rgba(109, 40, 217, 0.05); }
+        
+        .logo-icon-sm { width: 30px; height: 30px; background-color: var(--primary-color); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+        .tracking-wide { letter-spacing: 2px; }
+        .transform-rotate-90 { transform: rotate(90deg); display: inline-block; }
+        .transition-all { transition: all 0.2s ease-in-out; }
+        .cursor-pointer { cursor: pointer; }
+        .hover-bg-light:hover { background-color: #f1f3f5 !important; transform: translateY(-2px); }
+        
+        .border-left-blue { border-left: 4px solid #3b82f6; }
+        .border-left-pink { border-left: 4px solid #ec4899; }
+        .border-left-purple { border-left: 4px solid #8b5cf6; }
+        
+        /* Cố định chiều cao vùng lịch sử cuộn được */
+        .timeline-scroll { max-height: 300px; overflow-y: auto; padding-right: 10px;}
+        /* Tùy chỉnh thanh cuộn */
+        .timeline-scroll::-webkit-scrollbar { width: 6px; }
+        .timeline-scroll::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="d-flex" id="wrapper">
+        <div class="bg-white border-end shadow-sm" id="sidebar-wrapper">
+            <div class="text-center py-4 fs-4 fw-bold border-bottom">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <div class="logo-icon-sm">N</div>
+                    <span class="text-purple">NovaPay</span>
+                </div>
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="#" class="list-group-item list-group-item-action active"><i class="bi bi-grid-fill me-2"></i>Tổng quan</a>
+                <a href="#" class="list-group-item list-group-item-action text-secondary"><i class="bi bi-bank2 me-2"></i>Chuyển tiền</a>
+                <a href="#" class="list-group-item list-group-item-action text-secondary"><i class="bi bi-clock-history me-2"></i>Lịch sử</a>
+                <a href="#" class="list-group-item list-group-item-action text-secondary"><i class="bi bi-gear-fill me-2"></i>Cài đặt</a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 px-4 border-bottom shadow-sm">
+                <h4 class="m-0 fw-bold">Tổng quan</h4>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <div class="bg-light rounded-pill px-3 py-1 d-flex align-items-center">
+                        <i class="bi bi-search text-muted"></i>
+                        <input type="text" class="border-0 bg-transparent ms-2" style="outline: none;" placeholder="Tìm kiếm...">
+                    </div>
+                    <i class="bi bi-bell fs-5 position-relative">
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                    </i>
+                    <div class="d-flex align-items-center gap-2 ms-3 border-start ps-3">
+                        <img src="https://via.placeholder.com/40" class="rounded-circle" width="40" height="40">
+                        <span class="fw-bold">Huy Le</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-4">
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-4">
+                        <div class="card border-0 rounded-4 shadow-sm h-100 text-white p-4 position-relative overflow-hidden" 
+                             style="background: linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%); min-height: 240px;">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="fw-bold tracking-wide">NovaPay</span>
+                                <i class="bi bi-wifi fs-4 transform-rotate-90"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 text-white-50 small">Số dư khả dụng</p>
+                                <h2 class="fw-bold mb-0 mt-1">2,000,000 <span class="fs-5">VND</span></h2>
+                            </div>
+                            <div class="mt-auto pt-4 d-flex justify-content-between align-items-end">
+                                <div>
+                                    <p class="mb-0 text-white-50 small">Số tài khoản</p>
+                                    <p class="fw-bold mb-0 font-monospace tracking-wide">1773839689343865</p>
+                                </div>
+                                <div class="logo-icon-sm bg-white text-purple rounded-circle">N</div>
+                            </div>
+                            <div class="position-absolute rounded-circle bg-white opacity-10" style="width: 150px; height: 150px; top: -50px; right: -20px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="bg-white rounded-4 shadow-sm p-4 h-100 d-flex flex-column justify-content-center">
+                            <h5 class="fw-bold mb-4">Dịch vụ tiện ích</h5>
+                            <div class="row g-3">
+                                <div class="col-4 col-md-2">
+                                    <div class="border rounded-4 p-3 text-center hover-bg-light transition-all cursor-pointer h-100">
+                                        <i class="bi bi-send-fill fs-3 text-primary mb-2 d-block"></i>
+                                        <span class="small fw-bold text-dark">Chuyển</span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="border rounded-4 p-3 text-center hover-bg-light transition-all cursor-pointer h-100">
+                                        <i class="bi bi-plus-circle-fill fs-3 text-success mb-2 d-block"></i>
+                                        <span class="small fw-bold text-dark">Nạp</span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="border rounded-4 p-3 text-center hover-bg-light transition-all cursor-pointer h-100">
+                                        <i class="bi bi-box-arrow-up fs-3 text-danger mb-2 d-block"></i>
+                                        <span class="small fw-bold text-dark">Rút</span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="border rounded-4 p-3 text-center hover-bg-light transition-all cursor-pointer h-100">
+                                        <i class="bi bi-qr-code-scan fs-3 text-dark mb-2 d-block"></i>
+                                        <span class="small fw-bold text-dark">Quét QR</span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="border rounded-4 p-3 text-center hover-bg-light transition-all cursor-pointer h-100">
+                                        <i class="bi bi-lightning-charge-fill fs-3 text-warning mb-2 d-block"></i>
+                                        <span class="small fw-bold text-dark">Hóa đơn</span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="border rounded-4 p-3 text-center hover-bg-light transition-all cursor-pointer h-100 bg-light">
+                                        <i class="bi bi-grid-3x3-gap-fill fs-3 text-muted mb-2 d-block"></i>
+                                        <span class="small fw-bold text-muted">Tất cả</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="bg-white rounded-4 shadow-sm p-4 d-flex justify-content-between align-items-center border-left-blue">
+                            <div>
+                                <div class="text-muted small fw-bold mb-1">Tổng thu (Tháng)</div>
+                                <h4 class="fw-bold mb-0">+4,500,000 đ</h4>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 text-primary rounded p-3"><i class="bi bi-arrow-down-left fs-4"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white rounded-4 shadow-sm p-4 d-flex justify-content-between align-items-center border-left-pink">
+                            <div>
+                                <div class="text-muted small fw-bold mb-1">Tổng chi (Tháng)</div>
+                                <h4 class="fw-bold mb-0">-1,250,000 đ</h4>
+                            </div>
+                            <div class="bg-danger bg-opacity-10 text-danger rounded p-3"><i class="bi bi-arrow-up-right fs-4"></i></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white rounded-4 shadow-sm p-4 d-flex justify-content-between align-items-center border-left-purple">
+                            <div>
+                                <div class="text-muted small fw-bold mb-1">Điểm Nova Rewards</div>
+                                <h4 class="fw-bold mb-0">1,240 pts</h4>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 text-warning rounded p-3"><i class="bi bi-star-fill fs-4"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="bg-white rounded-4 shadow-sm p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Lưu lượng dòng tiền</h5>
+                                <select class="form-select form-select-sm w-auto border-0 bg-light fw-bold">
+                                    <option>7 ngày qua</option>
+                                </select>
+                            </div>
+                            <canvas id="mainChart" height="120"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="bg-white rounded-4 shadow-sm p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Lịch sử giao dịch</h5>
+                                <a href="#" class="text-decoration-none text-purple fw-bold small">Xem tất cả</a>
+                            </div>
+                            
+                            <div class="timeline-scroll position-relative ms-3 border-start border-2 border-light pb-2">
+                                <div class="position-relative mb-4 ms-4">
+                                    <div class="position-absolute bg-white border border-2 border-success rounded-circle" style="width: 16px; height: 16px; left: -33px; top: 5px;"></div>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold mb-1 text-truncate" style="max-width: 180px;">Nhận tiền từ Nguyễn Văn A</h6>
+                                            <p class="text-muted small mb-0">10:30 AM, Hôm nay</p>
+                                        </div>
+                                        <span class="fw-bold text-success">+ 2,000,000 đ</span>
+                                    </div>
+                                </div>
+
+                                <div class="position-relative mb-4 ms-4">
+                                    <div class="position-absolute bg-white border border-2 border-danger rounded-circle" style="width: 16px; height: 16px; left: -33px; top: 5px;"></div>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold mb-1 text-truncate" style="max-width: 180px;">Thanh toán Spotify Premium</h6>
+                                            <p class="text-muted small mb-0">08:15 AM, Hôm qua</p>
+                                        </div>
+                                        <span class="fw-bold text-danger">- 59,000 đ</span>
+                                    </div>
+                                </div>
+
+                                <div class="position-relative mb-2 ms-4">
+                                    <div class="position-absolute bg-white border border-2 border-warning rounded-circle" style="width: 16px; height: 16px; left: -33px; top: 5px;"></div>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold mb-1 text-truncate" style="max-width: 180px;">Thanh toán tiền điện tháng 2</h6>
+                                            <p class="text-muted small mb-0">14:00 PM, 15/03</p>
+                                        </div>
+                                        <span class="fw-bold text-danger">- 450,000 đ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'],
+                datasets: [
+                    { label: 'Tiền vào', data: [120, 190, 30, 150, 120, 130, 200], backgroundColor: '#6d28d9', borderRadius: 4 },
+                    { label: 'Tiền ra', data: [80, 50, 60, 40, 90, 20, 100], backgroundColor: '#ff4785', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -25,9 +25,4 @@ public class TransactionTypeController {
     public ResponseEntity<List<TransactionType>> getAllTypes() {
         return ResponseEntity.ok(repository.findAll());
     }
-
-    @PostMapping
-    public ResponseEntity<TransactionType> createType(@RequestBody TransactionType transactionType) {
-        return ResponseEntity.ok(repository.save(transactionType));
-    }
 }
