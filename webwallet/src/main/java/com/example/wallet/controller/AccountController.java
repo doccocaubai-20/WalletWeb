@@ -7,13 +7,17 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.wallet.dto.AccountInfoDTO;
+import com.example.wallet.dto.OpenSavingsAccountRequest;
+import com.example.wallet.dto.SavingsAccountDTO;
 import com.example.wallet.dto.SetPinRequest;
+import com.example.wallet.dto.UpdateSavingsGoalRequest;
 import com.example.wallet.entity.Account;
 import com.example.wallet.service.AccountService;
 import com.example.wallet.service.UserService;
@@ -39,6 +43,27 @@ public class AccountController {
             
         return ResponseEntity.ok(primaryAccount);
     }
+
+    @GetMapping("/savings")
+    public ResponseEntity<SavingsAccountDTO> getMySavingsAccount(Principal principal) {
+        return ResponseEntity.ok(
+                accountService.getSavingsAccountDto(principal.getName())
+                        .orElse(null)
+        );
+    }
+
+    @PostMapping("/savings/open")
+    public ResponseEntity<SavingsAccountDTO> openSavingsAccount(Principal principal,
+                                                                @Valid @RequestBody OpenSavingsAccountRequest request) {
+        return ResponseEntity.ok(accountService.openSavingsAccount(principal.getName(), request.getTargetAmount()));
+    }
+
+    @PutMapping("/savings/goal")
+    public ResponseEntity<SavingsAccountDTO> updateSavingsGoal(Principal principal,
+                                                               @Valid @RequestBody UpdateSavingsGoalRequest request) {
+        return ResponseEntity.ok(accountService.updateSavingsGoal(principal.getName(), request.getTargetAmount()));
+    }
+
     @PutMapping("/set-pin")
     public ResponseEntity<?> setPin(Principal principal, @Valid @RequestBody SetPinRequest request) {
         boolean isPasswordValid = userService.validatePassword(principal.getName(), request.getPassword());
@@ -46,7 +71,7 @@ public class AccountController {
             return ResponseEntity.badRequest().body("Mật khẩu không chính xác");
         }
 
-        userService.setAccountPin(principal.getName(), request.getPin());
+        userService.setAccountPin(principal.getName(),request.getAccountNumber(), request.getPin());
         return ResponseEntity.ok("Mã PIN đã được đặt thành công");
     }
 

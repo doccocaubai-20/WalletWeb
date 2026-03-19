@@ -86,6 +86,8 @@ public class AdminService {
         Account account = new Account();
         String newAccountNumber = System.currentTimeMillis() + String.format("%03d", (int)(Math.random() * 1000));
         account.setAccountNumber(newAccountNumber);
+        account.setAccountType("PAYMENT");
+        account.setStatus("ACTIVE");
         account.setUserAccount(savedAccount);
         accountRepository.save(account);
 

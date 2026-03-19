@@ -22,8 +22,4 @@ public class TopUpRequest {
 
     @Size(max = 255, message = "Nội dung nạp tiền quá dài")
     private String description;
-
-    @NotBlank(message = "Mã PIN không được để trống")
-    @Size(min = 6, max = 6, message = "Mã PIN phải đúng 6 ký tự")
-    private String pin;
 }

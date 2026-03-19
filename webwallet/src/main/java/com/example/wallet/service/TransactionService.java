@@ -1,6 +1,7 @@
 package com.example.wallet.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.wallet.dto.TransactionHistoryDTO;
+import com.example.wallet.dto.MonthlyTransactionSummaryDTO;
 import com.example.wallet.dto.TransferDTO;
 import com.example.wallet.entity.Account;
 import com.example.wallet.entity.TransactionType;
@@ -141,6 +143,35 @@ public class TransactionService {
             dto.setType(t.getAmount().compareTo(BigDecimal.ZERO) > 0 ? "IN" : "OUT");
             return dto;
         });
+    }
+
+    public MonthlyTransactionSummaryDTO getCurrentMonthSummary(String username, String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại!"));
+
+        if (!account.getUserAccount().getUsername().equals(username)) {
+            throw new RuntimeException("Bạn không có quyền xem ví này!");
+        }
+
+        LocalDate now = LocalDate.now();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = now.plusMonths(1).withDayOfMonth(1).atStartOfDay();
+
+        BigDecimal incoming = transactionsRepository.sumIncomingByAccountAndDateRange(
+                accountNumber,
+                startOfMonth,
+                startOfNextMonth
+        );
+        BigDecimal outgoing = transactionsRepository.sumOutgoingByAccountAndDateRange(
+                accountNumber,
+                startOfMonth,
+                startOfNextMonth
+        );
+
+        MonthlyTransactionSummaryDTO dto = new MonthlyTransactionSummaryDTO();
+        dto.setIncoming(incoming == null ? BigDecimal.ZERO : incoming);
+        dto.setOutgoing(outgoing == null ? BigDecimal.ZERO : outgoing);
+        return dto;
     }
 
 

@@ -76,6 +76,8 @@ public class UserService {
         Account account = new Account();
         String newAccountNumber = System.currentTimeMillis() + String.format("%03d", (int)(Math.random() * 1000));
         account.setAccountNumber(newAccountNumber);
+        account.setAccountType("PAYMENT");
+        account.setStatus("ACTIVE");
         account.setUserAccount(savedAccount);
 
         accountRepository.save(account);
@@ -137,8 +139,8 @@ public class UserService {
     }
 
     @Transactional
-    public void setAccountPin(String accountNumber, String pin) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
+    public void setAccountPin(String username,String accountNumber, String pin) {
+        Account account = accountRepository.findByAccountNumberAndUserAccount_Username(accountNumber,username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản ngân hàng!"));
 
         String encryptedPin = passwordEncoder.encode(pin);

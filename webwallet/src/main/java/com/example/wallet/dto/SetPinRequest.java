@@ -10,6 +10,9 @@ public class SetPinRequest {
     @NotBlank(message = "Mật khẩu không được để trống")
     private String password;
 
+    @NotBlank(message = "Số tài khoản không được để trống")
+    private String accountNumber;
+    
     @NotBlank(message = "Mã PIN không được để trống")
     @Pattern(regexp = "^\\d{4,6}$", message = "Mã PIN phải là số và có độ dài từ 4 đến 6 ký tự")
     private String pin;

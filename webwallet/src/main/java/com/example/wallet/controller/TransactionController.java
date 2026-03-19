@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.wallet.dto.TransferDTO;
+import com.example.wallet.dto.MonthlyTransactionSummaryDTO;
 import com.example.wallet.service.TransactionService;
 
 import jakarta.validation.Valid;
@@ -37,6 +38,13 @@ public class TransactionController {
                             @RequestParam(defaultValue = "10") int size) {
 
         return  ResponseEntity.ok( transactionService.getHistory(principal.getName(), accountNumber, page, size));
+    }
+
+    @GetMapping("/summary/{accountNumber}/monthly")
+    public ResponseEntity<MonthlyTransactionSummaryDTO> getCurrentMonthSummary(
+            Principal principal,
+            @PathVariable String accountNumber) {
+        return ResponseEntity.ok(transactionService.getCurrentMonthSummary(principal.getName(), accountNumber));
     }
 
 }

@@ -40,7 +40,7 @@ public class UserController {
         return ResponseEntity.ok(new JwtResponse(accessToken, refreshToken.getToken()));
     }
 
-    @PostMapping("refresh-token")
+    @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequest request){
         String requestRefreshToken = request.getRefreshToken();
 

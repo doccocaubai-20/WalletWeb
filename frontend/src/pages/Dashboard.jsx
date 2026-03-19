@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Chart from 'chart.js/auto';
-import '../css/dashboard.css';
+// import '../css/dashboard.css';
 const Dashboard = () => {
     const navigate = useNavigate();
     

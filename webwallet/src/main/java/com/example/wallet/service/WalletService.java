@@ -40,9 +40,6 @@ public class WalletService {
                 request.getLinkedBankId(), username)
                 .orElseThrow(() -> new RuntimeException("Ngân hàng liên kết không tồn tại hoặc không thuộc quyền sở hữu của bạn!"));
 
-        if (account.getPin() == null || !passwordEncoder.matches(request.getPin(), account.getPin())) {
-            throw new RuntimeException("INVALID_PIN");
-        }
 
         account.setBalance(account.getBalance().add(request.getAmount()));
         accountRepository.save(account);
@@ -56,6 +53,37 @@ public class WalletService {
                 description,
                 code,
                 "TOPUP");
+
+        return new TransactionResultResponse("TOPUP_SUCCESS", code, account.getBalance());
+    }
+
+    @Transactional
+    public TransactionResultResponse topUpByVNPay(String username,
+                                                  String accountNumber,
+                                                  BigDecimal amount,
+                                                  String externalTxnRef) {
+        Account account = accountRepository.findByAccountNumberAndUserAccount_Username(accountNumber, username)
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại hoặc không thuộc quyền sở hữu của bạn!"));
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Số tiền nạp không hợp lệ");
+        }
+
+        account.setBalance(account.getBalance().add(amount));
+        accountRepository.save(account);
+
+        String code = (externalTxnRef == null || externalTxnRef.isBlank())
+                ? generateTransactionCode()
+                : "VNP" + externalTxnRef;
+
+        saveTransactionRecord(
+                account,
+                amount,
+                "VNPAY",
+                "Nạp tiền qua VNPAY",
+                code,
+                "TOPUP"
+        );
 
         return new TransactionResultResponse("TOPUP_SUCCESS", code, account.getBalance());
     }

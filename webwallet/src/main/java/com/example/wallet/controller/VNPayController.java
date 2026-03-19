@@ -1,24 +1,52 @@
 package com.example.wallet.controller;
 
 import com.example.wallet.config.VNPayConfig;
+import com.example.wallet.repository.AccountRepository;
+import com.example.wallet.service.WalletService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/vnpay")
 public class VNPayController {
+
+    private static class PendingTopUp {
+        private final String username;
+        private final String accountNumber;
+        private final long amount;
+
+        private PendingTopUp(String username, String accountNumber, long amount) {
+            this.username = username;
+            this.accountNumber = accountNumber;
+            this.amount = amount;
+        }
+    }
+
+    private final Map<String, PendingTopUp> pendingTopUps = new ConcurrentHashMap<>();
+    private final WalletService walletService;
+    private final AccountRepository accountRepository;
+
+    public VNPayController(WalletService walletService, AccountRepository accountRepository) {
+        this.walletService = walletService;
+        this.accountRepository = accountRepository;
+    }
 
     @Value("${vnp.tmnCode}")
     private String vnp_TmnCode;
@@ -29,13 +57,47 @@ public class VNPayController {
     @Value("${vnp.payUrl}")
     private String vnp_PayUrl;
 
+    @Value("${vnp.returnUrl:http://localhost:8080/api/vnpay/payment-return}")
+    private String vnp_ReturnUrl;
+
+    @Value("${vnp.defaultIpAddr:127.0.0.1}")
+    private String vnp_DefaultIpAddr;
+
+    @Value("${app.frontendTopupUrl:http://localhost:5173/topup}")
+    private String frontendTopupUrl;
+
     @GetMapping("/create-payment")
-    public ResponseEntity<?> createPayment(@RequestParam long amount) throws Exception {
+    public ResponseEntity<?> createPayment(Principal principal,
+                                           @RequestParam long amount,
+                                           @RequestParam String accountNumber,
+                                           HttpServletRequest request) throws Exception {
+        if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Bạn cần đăng nhập để nạp tiền qua VNPAY");
+        }
+
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Số tiền không hợp lệ");
+        }
+
+        if (accountNumber == null || accountNumber.isBlank()) {
+            return ResponseEntity.badRequest().body("Thiếu số tài khoản ví để nạp tiền");
+        }
+
+        boolean isOwnedAccount = accountRepository
+            .findByAccountNumberAndUserAccount_Username(accountNumber, principal.getName())
+            .isPresent();
+        if (!isOwnedAccount) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Số tài khoản ví không thuộc quyền sở hữu của bạn");
+        }
+
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_TxnRef = VNPayConfig.getRandomNumber(8);
-        String vnp_IpAddr = "127.0.0.1"; // Hardcode tạm cho môi trường test đồ án
-        String vnp_OrderInfo = "Nap tien vao vi dien tu";
+        String vnp_IpAddr = resolveClientIp(request);
+        String vnp_OrderInfo = "Nap tien vao vi " + accountNumber;
+
+        pendingTopUps.put(vnp_TxnRef, new PendingTopUp(principal.getName(), accountNumber, amount));
         
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -47,7 +109,7 @@ public class VNPayController {
         vnp_Params.put("vnp_OrderInfo", vnp_OrderInfo);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", "http://localhost:8080/api/vnpay/payment-return"); 
+        vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
         // Định dạng thời gian tạo giao dịch
@@ -96,17 +158,75 @@ public class VNPayController {
     }
 
     @GetMapping("/payment-return")
-    public String paymentReturn(HttpServletRequest request) {
-        // Lấy mã phản hồi và số tiền từ VNPAY trả về trên URL
+    public ResponseEntity<Void> paymentReturn(HttpServletRequest request) {
         String responseCode = request.getParameter("vnp_ResponseCode");
         String amountStr = request.getParameter("vnp_Amount");
+        String txnRef = request.getParameter("vnp_TxnRef");
 
-        // Mã "00" nghĩa là thanh toán thành công
-        if ("00".equals(responseCode)) {
-            long realAmount = Long.parseLong(amountStr) / 100; 
-            return "Giao dịch thành công! Bạn vừa nạp " + realAmount + " VNĐ.";
-        } else {
-            return "Giao dịch thất bại hoặc đã bị hủy!";
+        String status = "failed";
+        String message = "Giao dịch thất bại hoặc đã bị hủy.";
+        long realAmount = 0;
+
+        if (amountStr != null && !amountStr.isBlank()) {
+            try {
+                realAmount = Long.parseLong(amountStr) / 100;
+            } catch (NumberFormatException ignored) {
+                realAmount = 0;
+            }
         }
+
+        PendingTopUp pending = null;
+        if (txnRef != null) {
+            pending = pendingTopUps.remove(txnRef);
+        }
+
+        if ("00".equals(responseCode) && pending != null && pending.amount == realAmount) {
+            try {
+                walletService.topUpByVNPay(
+                        pending.username,
+                        pending.accountNumber,
+                        BigDecimal.valueOf(realAmount),
+                        txnRef
+                );
+                status = "success";
+                message = "Nạp tiền thành công qua VNPAY.";
+            } catch (Exception ex) {
+                status = "failed";
+                message = "Thanh toán thành công nhưng ghi nhận ví thất bại. Vui lòng liên hệ hỗ trợ.";
+            }
+        } else if ("00".equals(responseCode) && pending == null) {
+            status = "failed";
+            message = "Giao dịch đã xử lý trước đó hoặc không hợp lệ.";
+        }
+
+        String redirectUrl = frontendTopupUrl
+                + "?vnpayStatus=" + URLEncoder.encode(status, StandardCharsets.UTF_8)
+                + "&amount=" + realAmount
+                + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(redirectUrl))
+                .build();
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        if (request == null) {
+            return vnp_DefaultIpAddr;
+        }
+
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            String first = xForwardedFor.split(",")[0].trim();
+            if (!first.isBlank()) {
+                return first;
+            }
+        }
+
+        String remoteAddr = request.getRemoteAddr();
+        if (remoteAddr != null && !remoteAddr.isBlank()) {
+            return remoteAddr;
+        }
+
+        return vnp_DefaultIpAddr;
     }
 }

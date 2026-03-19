@@ -26,7 +26,13 @@ public class Account {
     @Column(length = 20)
     private String status = "OPEN";
 
+    @Column(nullable = false, length = 20)
+    private String accountType = "PAYMENT";
+
     private LocalDateTime openDate = LocalDateTime.now();
+
+    @Column(precision = 19, scale = 2)
+    private BigDecimal targetAmount;
 
     @ManyToOne
     @JoinColumn(name = "UserID", referencedColumnName = "userID", nullable = false)

@@ -27,4 +27,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     List<Account> findAllByUserAccount_Username(String username);
     Optional<Account> findByAccountNumberAndUserAccount_Username(String accountNumber, String username);
+    Optional<Account> findFirstByUserAccount_UsernameAndAccountTypeAndStatusOrderByAccIDAsc(String username, String accountType, String status);
+    Optional<Account> findFirstByUserAccount_UsernameAndAccountTypeOrderByAccIDAsc(String username, String accountType);
+    boolean existsByUserAccount_UsernameAndAccountType(String username, String accountType);
 }
