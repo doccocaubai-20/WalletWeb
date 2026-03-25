@@ -16,24 +16,30 @@ public class GlobalExceptionHandler {
 
     // Bắt lỗi từ @Valid trong DTO
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse("VALIDATION_ERROR", "Dữ liệu không hợp lệ", errors));
     }
 
     // Bắt lỗi logic nghiệp vụ từ Service 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<ApiErrorResponse> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse("BUSINESS_ERROR", ex.getMessage()));
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<?> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
-        return ResponseEntity.badRequest().body("Hệ thống đang xử lý một giao dịch khác của bạn. Vui lòng thử lại sau giây lát.");
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
+        return ResponseEntity.badRequest()
+                .body(new ApiErrorResponse(
+                        "CONCURRENT_REQUEST",
+                        "Hệ thống đang xử lý một giao dịch khác của bạn. Vui lòng thử lại sau giây lát."
+                ));
     }
 }

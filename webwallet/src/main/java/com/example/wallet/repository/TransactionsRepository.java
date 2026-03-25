@@ -28,21 +28,21 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Inte
 
     Page<Transactions> findByAccount_AccountNumberOrderByTransIDDesc(String accountNumber,Pageable pageable);
 
-        @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transactions t " +
-            "WHERE t.account.accountNumber = :accountNumber " +
-            "AND t.createdDate >= :startDate " +
-            "AND t.createdDate < :endDate " +
-            "AND t.amount > 0")
-        BigDecimal sumIncomingByAccountAndDateRange(@Param("accountNumber") String accountNumber,
-                                  @Param("startDate") LocalDateTime startDate,
-                                  @Param("endDate") LocalDateTime endDate);
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transactions t " +
+        "WHERE t.account.accountNumber = :accountNumber " +
+        "AND t.createdDate >= :startDate " +
+        "AND t.createdDate < :endDate " +
+        "AND t.amount > 0")
+    BigDecimal sumIncomingByAccountAndDateRange(@Param("accountNumber") String accountNumber,
+                                @Param("startDate") LocalDateTime startDate,
+                                @Param("endDate") LocalDateTime endDate);
 
-        @Query("SELECT COALESCE(SUM(-t.amount), 0) FROM Transactions t " +
-            "WHERE t.account.accountNumber = :accountNumber " +
-            "AND t.createdDate >= :startDate " +
-            "AND t.createdDate < :endDate " +
-            "AND t.amount < 0")
-        BigDecimal sumOutgoingByAccountAndDateRange(@Param("accountNumber") String accountNumber,
-                                  @Param("startDate") LocalDateTime startDate,
-                                  @Param("endDate") LocalDateTime endDate);
+    @Query("SELECT COALESCE(SUM(-t.amount), 0) FROM Transactions t " +
+        "WHERE t.account.accountNumber = :accountNumber " +
+        "AND t.createdDate >= :startDate " +
+        "AND t.createdDate < :endDate " +
+        "AND t.amount < 0")
+    BigDecimal sumOutgoingByAccountAndDateRange(@Param("accountNumber") String accountNumber,
+                                @Param("startDate") LocalDateTime startDate,
+                                @Param("endDate") LocalDateTime endDate);
 }

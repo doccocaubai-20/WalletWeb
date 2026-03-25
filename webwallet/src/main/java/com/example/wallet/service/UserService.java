@@ -8,6 +8,8 @@ import java.util.Random;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.wallet.dto.RegisterRequest;
 import com.example.wallet.dto.ResetPasswordRequest;
@@ -20,8 +22,17 @@ import com.example.wallet.repository.AccountRepository;
 import com.example.wallet.repository.OtpTokenRepository;
 import com.example.wallet.repository.PeopleRepository;
 import com.example.wallet.repository.UserAccountRepository;
+import com.example.wallet.security.JwtUtils;
 
 import lombok.RequiredArgsConstructor;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +44,19 @@ public class UserService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final OtpTokenRepository otpTokenRepository;    
+    private final OtpTokenRepository otpTokenRepository;
+    private final JwtUtils jwtUtils;
+
+        @Value("${app.avatar.upload-dir:uploads/avatars}")
+        private String avatarUploadDir;
+
+        private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/jpg",
+            "image/webp",
+            "image/gif"
+        );
 
     @Transactional
     public String register(RegisterRequest dto){
@@ -139,6 +162,65 @@ public class UserService {
     }
 
     @Transactional
+    public String updateProfileAvatar(String username, MultipartFile avatarFile) {
+        UserAccount user = userAccountRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản!"));
+
+        if (avatarFile == null || avatarFile.isEmpty()) {
+            throw new RuntimeException("Ảnh đại diện không hợp lệ!");
+        }
+
+        if (avatarFile.getSize() > 2 * 1024 * 1024) {
+            throw new RuntimeException("Ảnh quá lớn. Vui lòng chọn ảnh dưới 2MB!");
+        }
+
+        String contentType = avatarFile.getContentType() == null ? "" : avatarFile.getContentType().toLowerCase();
+        if (!ALLOWED_IMAGE_TYPES.contains(contentType)) {
+            throw new RuntimeException("Định dạng ảnh không hợp lệ!");
+        }
+
+        String extension = switch (contentType) {
+            case "image/png" -> ".png";
+            case "image/jpeg", "image/jpg" -> ".jpg";
+            case "image/webp" -> ".webp";
+            case "image/gif" -> ".gif";
+            default -> "";
+        };
+
+        if (extension.isEmpty()) {
+            throw new RuntimeException("Định dạng ảnh không hợp lệ!");
+        }
+
+        Path uploadDirPath = Paths.get(avatarUploadDir).toAbsolutePath().normalize();
+
+        try {
+            Files.createDirectories(uploadDirPath);
+
+            String fileName = "avatar-" + user.getUserID() + "-" + UUID.randomUUID() + extension;
+            Path targetPath = uploadDirPath.resolve(fileName);
+
+            Files.copy(avatarFile.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            People people = user.getPeople();
+            String currentAvatarUrl = people.getAvatarUrl();
+
+            if (currentAvatarUrl != null && currentAvatarUrl.startsWith("/uploads/avatars/")) {
+                Path oldFilePath = uploadDirPath.resolve(currentAvatarUrl.replace("/uploads/avatars/", "")).normalize();
+                if (oldFilePath.startsWith(uploadDirPath)) {
+                    Files.deleteIfExists(oldFilePath);
+                }
+            }
+
+            people.setAvatarUrl("/uploads/avatars/" + fileName);
+            peopleRepository.save(people);
+        } catch (IOException ex) {
+            throw new RuntimeException("Không thể lưu ảnh đại diện. Vui lòng thử lại.");
+        }
+
+        return "Cập nhật ảnh đại diện thành công!";
+    }
+
+    @Transactional
     public void setAccountPin(String username,String accountNumber, String pin) {
         Account account = accountRepository.findByAccountNumberAndUserAccount_Username(accountNumber,username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản ngân hàng!"));
@@ -205,35 +287,54 @@ public class UserService {
         return "Mã xác nhận đã được gửi đến email của bạn. Mã có hiệu lực trong 5 phút.";
     }
 
-    @Transactional
-    public String resetPassword(ResetPasswordRequest dto) {
-        UserAccount user = userAccountRepository.findByPeople_Email(dto.getEmail())
+    @Transactional(noRollbackFor = RuntimeException.class)
+    public String verifyOtp(String email, String otp) {
+        userAccountRepository.findByPeople_Email(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
 
-        OtpToken otpToken = otpTokenRepository.findTopByEmailAndIsUsedFalseOrderByExpiryTimeDesc(dto.getEmail())
+        OtpToken otpToken = otpTokenRepository.findTopByEmailAndIsUsedFalseOrderByExpiryTimeDesc(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy mã OTP hợp lệ cho email này!"));
 
-        if (!otpToken.getOtpCode().equals(dto.getOtp())) {
-        otpToken.setFailedAttempts(otpToken.getFailedAttempts() + 1);
-        int remaining = 5 - otpToken.getFailedAttempts();
-        
+        if (otpToken.getExpiryTime().isBefore(LocalDateTime.now())) {
+            otpToken.setUsed(true);
+            otpTokenRepository.save(otpToken);
+            throw new RuntimeException("Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới!");
+        }
+
+        if (!otpToken.getOtpCode().equals(otp)) {
+            otpToken.setFailedAttempts(otpToken.getFailedAttempts() + 1);
+            int remaining = 5 - otpToken.getFailedAttempts();
+
             if (remaining <= 0) {
                 otpToken.setUsed(true);
                 otpTokenRepository.save(otpToken);
                 throw new RuntimeException("Bạn đã nhập sai 5 lần. Mã OTP đã bị hủy!");
             }
-        
+
             otpTokenRepository.save(otpToken);
             throw new RuntimeException("Mã OTP không chính xác! Bạn còn " + remaining + " lần nhập.");
         }
 
-        // Đổi mật khẩu
-        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userAccountRepository.save(user);
-
-        // Đánh dấu OTP đã sử dụng
         otpToken.setUsed(true);
         otpTokenRepository.save(otpToken);
+
+        return jwtUtils.generatePasswordResetToken(email);
+    }
+
+    @Transactional
+    public String resetPassword(ResetPasswordRequest dto) {
+        if (!jwtUtils.validatePasswordResetToken(dto.getResetToken())) {
+            throw new RuntimeException("Reset token không hợp lệ hoặc đã hết hạn!");
+        }
+        
+
+        String email = jwtUtils.extractUsername(dto.getResetToken());
+
+        UserAccount user = userAccountRepository.findByPeople_Email(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userAccountRepository.save(user);
 
         return "Đặt lại mật khẩu thành công!";
     }

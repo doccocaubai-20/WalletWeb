@@ -1,22 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import '../css/home.css';
 
 const Home = () => {
-    // Đảm bảo Bootstrap JS hoạt động cho navbar collapse
-    useEffect(() => {
-        const bootstrapScript = document.createElement('script');
-        bootstrapScript.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js";
-        bootstrapScript.async = true;
-        document.body.appendChild(bootstrapScript);
-
-        return () => {
-            document.body.removeChild(bootstrapScript);
-        };
-    }, []);
-
     return (
         <>
-            {/* 1. NAVBAR - Đã tinh chỉnh class khớp CSS */}
             <nav className="navbar navbar-expand-lg fixed-top bg-white">
                 <div className="container">
                     <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
@@ -30,9 +18,9 @@ const Home = () => {
 
                     <div className="collapse navbar-collapse" id="mainNav">
                         <ul className="navbar-nav mx-auto">
-                            <li className="nav-item"><a className="nav-link" href="#features">Tính năng</a></li>
-                            <li className="nav-item"><a className="nav-link" href="#security">Bảo mật</a></li>
-                            <li className="nav-item"><a className="nav-link" href="#fees">Biểu phí</a></li>
+                            {/* <li className="nav-item"><a className="nav-link" href="#features">Tính năng</a></li>
+                            <li className="nav-item"><a className="nav-link" href="#security">Tích điểm</a></li>
+                            <li className="nav-item"><a className="nav-link" href="#fees">Quản lý</a></li> */}
                         </ul>
                         <div className="auth-buttons">
                             <Link to="/login" className="btn btn-outline-custom me-2">Đăng nhập</Link>
@@ -41,8 +29,6 @@ const Home = () => {
                     </div>
                 </div>
             </nav>
-
-            {/* 2. HERO SECTION - Đã tinh chỉnh class khớp CSS */}
             <header className="hero-section">
                 <div className="container">
                     <div className="row align-items-center">
@@ -73,15 +59,12 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-                        {/* Khu vực ảnh Hero bên phải */}
                         <div className="col-lg-6 d-none d-lg-block text-center floating-img">
-                             <img src="/images/hero-mockup.png" alt="NovaPay App" className="img-fluid" style={{maxHeight: '500px'}} onError={(e) => {e.target.style.display = 'none'}}/>
+                             <img src="../public/images/img/cardts.png"  alt="NovaPay App" className="img-fluid" style={{maxHeight: '500px'}} onError={(e) => {e.target.style.display = 'none'}}/>
                         </div>
                     </div>
                 </div>
             </header>
-
-            {/* 3. FEATURES SECTION - Đã tinh chỉnh class khớp CSS */}
             <section id="features" className="section-padding">
                 <div className="container">
                     <div className="text-center mb-5">
@@ -122,8 +105,6 @@ const Home = () => {
                     </div>
                 </div>
             </section>
-
-            {/* 4. FOOTER - Đã tinh chỉnh class khớp CSS */}
             <footer className="footer-custom">
                 <div className="container text-center">
                     <p className="mb-0">© 2026 NovaPay</p>

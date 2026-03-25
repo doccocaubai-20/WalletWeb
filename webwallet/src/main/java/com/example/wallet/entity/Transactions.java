@@ -23,6 +23,10 @@ public class Transactions {
     private String relatedParty;
 
     @ManyToOne
+    @JoinColumn(name = "ServiceID")
+    private ServiceProduct serviceProduct;
+
+    @ManyToOne
     @JoinColumn(name = "TransTypeID")
     private TransactionType transactionType; 
 

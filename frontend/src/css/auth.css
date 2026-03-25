@@ -1,0 +1,98 @@
+/* Auth pages: Login + Register */
+
+.bg-branding {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.logo-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 800;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.form-control-lg {
+    font-size: 0.95rem;
+    padding: 12px 15px;
+}
+
+#step1,
+#step2 {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.feature-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.input-group-text {
+    border-color: #dee2e6;
+}
+
+.input-group:focus-within .input-group-text,
+.input-group:focus-within .form-control {
+    border-color: var(--primary-color);
+    box-shadow: none;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.1);
+    border-radius: 0.5rem;
+}
+
+.bg-soft-purple {
+    background: linear-gradient(135deg, #f3f0ff 0%, #eef2ff 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-card {
+    background: white;
+    padding: 48px;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(109, 40, 217, 0.08);
+    width: 100%;
+    max-width: 480px;
+    border: 1px solid rgba(255,255,255,0.5);
+}
+
+.auth-logo {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 20px rgba(109, 40, 217, 0.2);
+}

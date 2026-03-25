@@ -1,0 +1,185 @@
+/* Legacy dashboard/profile styles */
+
+/* 1. Layout Wrapper */
+#wrapper {
+    overflow-x: hidden;
+    min-height: 700px;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem;
+    transition: margin 0.25s ease-out;
+    width: 15rem;
+    position: fixed;
+    z-index: 1000;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+}
+
+#sidebar-wrapper .list-group {
+    width: 15rem;
+}
+
+#page-content-wrapper {
+    min-width: 100vw;
+    margin-left: 0;
+    transition: margin 0.25s ease-out;
+    padding-left: 0;
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
+    }
+
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+        margin-left: 15rem;
+        padding-left: 0;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -15rem;
+    }
+
+    #wrapper.toggled #page-content-wrapper {
+        margin-left: 0;
+    }
+}
+
+.list-group-item {
+    border: none;
+    padding: 20px 30px;
+    font-weight: 500;
+}
+
+.list-group-item.active {
+    background-color: transparent;
+    color: var(--primary-color);
+    font-weight: bold;
+    border-right: 4px solid var(--primary-color);
+}
+
+.list-group-item-action:hover {
+    color: var(--primary-color);
+    background-color: rgba(109, 40, 217, 0.05);
+}
+
+.logo-icon-sm {
+    width: 30px;
+    height: 30px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.border-left-purple {
+    border-left: 5px solid var(--primary-color);
+}
+
+.border-left-pink {
+    border-left: 5px solid var(--accent-color);
+}
+
+.border-left-blue {
+    border-left: 5px solid #3b82f6;
+}
+
+.bg-light-purple {
+    background-color: rgba(109, 40, 217, 0.1);
+}
+
+.bg-light-pink {
+    background-color: rgba(255, 71, 133, 0.1);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(109, 40, 217, 0.02);
+}
+
+.hover-bg-light {
+    transition: background-color 0.2s ease;
+}
+
+.hover-bg-light:hover {
+    background-color: #b5bbc0;
+}
+
+.hover-bg-light:hover .btn-light {
+    background-color: #e9ecef;
+    color: var(--primary-color) !important;
+}
+
+.hover-purple {
+    transition: all 0.2s;
+}
+
+.hover-purple:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+.form-control[readonly] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.modal-content {
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.1);
+}
+
+.spotify-icon {
+    width: 50px;
+    height: 50px;
+    background: #1db954;
+}
+
+.success-badge {
+    font-size: 0.7rem;
+}
+
+.detail-button {
+    font-size: 0.8rem;
+}
+
+.icon-purple {
+    width: 50px;
+    height: 50px;
+    background: #6d28d9;
+}
+
+.icon-orange {
+    width: 50px;
+    height: 50px;
+    background: #ff9800;
+}
+
+.icon-red {
+    width: 50px;
+    height: 50px;
+    background: #ee4d2d;
+}
+
+
+.purple-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(109, 40, 217, 0.2);
+    border-color: rgba(109, 40, 217, 0.3);
+}

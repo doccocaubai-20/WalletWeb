@@ -84,7 +84,7 @@ public class TransactionService {
         return "SUCCESS";
     }
 
-    private String generateTransactionCode() {
+    public static String generateTransactionCode() {
         LocalDateTime now = LocalDateTime.now();
         
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -135,12 +135,14 @@ public class TransactionService {
         return transactionPage.map( t -> {
             TransactionHistoryDTO dto = new TransactionHistoryDTO();
             dto.setTransactionCode(t.getTransactionCode());
+            dto.setServiceId(t.getServiceProduct() != null ? t.getServiceProduct().getServiceId() : null);
             dto.setAmount(t.getAmount());
             dto.setBalanceAfter(t.getBalanceAfter());
             dto.setRelatedParty(t.getRelatedParty());
             dto.setDescription(t.getDescription());
             dto.setStatus(t.getStatus());
             dto.setType(t.getAmount().compareTo(BigDecimal.ZERO) > 0 ? "IN" : "OUT");
+            dto.setCreatedDate(t.getCreatedDate());
             return dto;
         });
     }

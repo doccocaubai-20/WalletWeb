@@ -10,8 +10,10 @@ import com.example.wallet.security.JwtUtils;
 import com.example.wallet.service.RefreshTokenService;
 import com.example.wallet.service.UserService;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -21,7 +23,6 @@ public class UserController {
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
     
-
     private final JwtUtils jwtUtils;
 
     @PostMapping("/register")
@@ -43,20 +44,15 @@ public class UserController {
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequest request){
         String requestRefreshToken = request.getRefreshToken();
-
-        // 1. Gọi Service để tìm Token
+        
         RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken);
 
-        // 2. Gọi Service để kiểm tra hạn sử dụng
         refreshTokenService.verifyExpiration(refreshToken);
 
-        // 3. Lấy UserAccount từ Token hợp lệ
         UserAccount user = refreshToken.getUserAccount();
 
-        // 4. Tạo Access Token mới
         String newAccessToken = jwtUtils.generateToken(user.getUsername());
-
-        // 5. Trả về kết quả
+        
         return ResponseEntity.ok(new JwtResponse(newAccessToken, requestRefreshToken));
     }
 
@@ -84,6 +80,11 @@ public class UserController {
         return ResponseEntity.ok(userService.changePassword(principal.getName(), dto.getOldPassword(), dto.getNewPassword()));
     }
 
+    @PutMapping("/my-profile/avatar")
+    public ResponseEntity<?> updateMyAvatar(Principal principal, @RequestParam("avatar") MultipartFile avatarFile) {
+        return ResponseEntity.ok(userService.updateProfileAvatar(principal.getName(), avatarFile));
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         return ResponseEntity.ok(userService.forgotPassword(request.getEmail()));
@@ -92,6 +93,15 @@ public class UserController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(userService.resetPassword(request));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        String resetToken = userService.verifyOtp(request.getEmail(), request.getOtp());
+        return ResponseEntity.ok(Map.of(
+                "message", "Xác thực OTP thành công.",
+                "resetToken", resetToken
+        ));
     }
 
 }

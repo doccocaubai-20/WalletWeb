@@ -32,8 +32,9 @@ public class AdminController {
     }
     @GetMapping("/users")
     public ResponseEntity<?> getUsersByRole(@RequestParam(defaultValue = "CUSTOMER") String role,@RequestParam(defaultValue = "0") int page,
-                            @RequestParam(defaultValue = "10") int size){
-        return ResponseEntity.ok(adminService.getUsersByRole(role,page,size));
+                            @RequestParam(defaultValue = "10") int size,
+                            @RequestParam(required = false, defaultValue = "") String keyword){
+        return ResponseEntity.ok(adminService.getUsersByRole(role,page,size,keyword));
     }
         
     @PostMapping("/user")

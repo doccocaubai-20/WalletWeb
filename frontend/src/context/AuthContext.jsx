@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import api from '../api/axios';
+import { clearStoredAvatar } from '../utils/avatar';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userRole');
+    clearStoredAvatar();
     setAccessToken(null);
     setRefreshToken(null);
     setUserRole(null);
@@ -103,14 +104,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    const currentToken = accessToken;
-
     try {
-      if (currentToken) {
-        await axios.post('/api/users/logout', {}, {
-          headers: { Authorization: `Bearer ${currentToken}` },
-        });
-      }
+      await api.post('/api/users/logout');
     } catch {
       // Best-effort logout: even if server revoke fails, clear local auth state.
     } finally {

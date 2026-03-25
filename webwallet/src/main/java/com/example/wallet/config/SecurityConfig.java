@@ -41,9 +41,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/register", 
                                  "/api/users/login",
+                                 "/api/users/refresh-token",
                                  "/api/users/forgot-password",
+                                 "/api/users/verify-otp",
                                  "/api/users/reset-password",
-                                 "/api/test/**",
+                                 "/uploads/**",
                                  "/api/vnpay/**",
                                  "/v3/api-docs",
                                  "/v3/api-docs/**",
@@ -56,6 +58,8 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
+    // CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

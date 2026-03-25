@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { parseApiErrorMessage } from '../utils/httpError';
+import '../css/auth.css';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
-    const [debugMsg, setDebugMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
     
@@ -19,7 +20,6 @@ const Login = () => {
 
         try {
             sessionStorage.removeItem('lastApiError');
-            setDebugMsg('');
             const role = await login({ username, password });
             
             if (role === 'ADMIN') {
@@ -29,26 +29,7 @@ const Login = () => {
             }
             
         } catch (error) {
-            if (error.response && error.response.data) {
-                if (typeof error.response.data === 'string') {
-                    setErrorMsg(error.response.data);
-                } else {
-                    setErrorMsg(error.response.data.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
-                }
-            } else {
-                setErrorMsg('Khong the ket noi den may chu. Vui long thu lai sau.');
-            }
-
-            const lastApiErrorRaw = sessionStorage.getItem('lastApiError');
-            if (lastApiErrorRaw) {
-                try {
-                    const lastApiError = JSON.parse(lastApiErrorRaw);
-                    const statusText = lastApiError?.status ? `HTTP ${lastApiError.status}` : 'NO_STATUS';
-                    setDebugMsg(`API lỗi: ${lastApiError?.method || 'UNK'} ${lastApiError?.url || ''} (${statusText}) - ${lastApiError?.message || ''}`);
-                } catch {
-                    setDebugMsg('Không đọc được thông tin lỗi API gần nhất.');
-                }
-            }
+            setErrorMsg(parseApiErrorMessage(error, 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));
         } finally {
             setIsLoading(false);
         }
@@ -64,16 +45,9 @@ const Login = () => {
                     <p className="text-muted small">Chào mừng bạn quay trở lại với NovaPay</p>
                 </div>
 
-                {/* Hiển thị thông báo lỗi nếu có */}
                 {errorMsg && (
                     <div className="alert alert-danger py-2 text-center small mb-3">
                         {errorMsg}
-                    </div>
-                )}
-
-                {debugMsg && (
-                    <div className="alert alert-warning py-2 small mb-3">
-                        {debugMsg}
                     </div>
                 )}
 
@@ -104,7 +78,7 @@ const Login = () => {
                             <input 
                                 type="password" 
                                 className="form-control form-control-lg bg-light border-start-0 rounded-end-3 ps-0" 
-                                placeholder="••••••••" 
+                                placeholder="•••••••••" 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required 

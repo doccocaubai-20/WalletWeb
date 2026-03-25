@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.wallet.dto.AccountInfoDTO;
+import com.example.wallet.dto.DepositSavingsRequest;
 import com.example.wallet.dto.OpenSavingsAccountRequest;
 import com.example.wallet.dto.SavingsAccountDTO;
 import com.example.wallet.dto.SetPinRequest;
@@ -62,6 +63,18 @@ public class AccountController {
     public ResponseEntity<SavingsAccountDTO> updateSavingsGoal(Principal principal,
                                                                @Valid @RequestBody UpdateSavingsGoalRequest request) {
         return ResponseEntity.ok(accountService.updateSavingsGoal(principal.getName(), request.getTargetAmount()));
+    }
+
+    @PostMapping("/savings/deposit")
+    public ResponseEntity<?> depositSavings(Principal principal, 
+                                            @Valid @RequestBody DepositSavingsRequest request){
+        return ResponseEntity.ok(accountService.depositSavings(principal.getName(), request));
+    }
+
+    @PostMapping("/savings/withdraw")
+    public ResponseEntity<?> withdrawSavings(Principal principal,
+                                             @Valid @RequestBody DepositSavingsRequest request) {
+        return ResponseEntity.ok(accountService.withdrawSavings(principal.getName(), request));
     }
 
     @PutMapping("/set-pin")

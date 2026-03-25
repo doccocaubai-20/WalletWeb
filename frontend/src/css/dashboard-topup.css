@@ -1,0 +1,274 @@
+/* Top up page specific */
+
+.wallet-topup-wrap {
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.wallet-topup-back {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    border-radius: 10px;
+    height: 38px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.wallet-topup-card {
+    background: #fff;
+    border: 1px solid #e8ebf0;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.wallet-topup-card h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.wallet-topup-amount-box {
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0 12px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wallet-topup-amount-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.wallet-topup-amount-box span {
+    color: #6b7280;
+    font-weight: 700;
+    margin-left: 10px;
+}
+
+.wallet-topup-quick-list {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wallet-topup-quick-list button {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 7px 12px;
+}
+
+.wallet-topup-quick-list button.active {
+    background: #6d28d9;
+    color: #fff;
+    border-color: #6d28d9;
+}
+
+.wallet-topup-methods {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.wallet-topup-methods button {
+    flex: 0 1 220px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    color: #374151;
+    font-weight: 700;
+    height: 44px;
+}
+
+.wallet-topup-methods button.active {
+    background: rgba(109, 40, 217, 0.08);
+    border-color: rgba(109, 40, 217, 0.32);
+    color: #5b21b6;
+}
+
+.wallet-topup-bank-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.wallet-topup-bank-head small {
+    color: #6b7280;
+}
+
+.wallet-linked-bank-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.wallet-supported-bank-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.wallet-linked-bank-item {
+    border: 1px solid #dbe1ea;
+    border-radius: 12px;
+    background: #fff;
+    text-align: left;
+    padding: 12px;
+}
+
+.wallet-linked-bank-item.active {
+    border-color: #f97316;
+    box-shadow: inset 0 0 0 1px #f97316;
+    background: #fff7ed;
+}
+
+.wallet-linked-bank-item .bank-name {
+    display: block;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 3px;
+}
+
+.wallet-linked-bank-item small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.wallet-topup-submit-row {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wallet-topup-inline-form {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.wallet-topup-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.wallet-topup-field.full {
+    grid-column: 1 / -1;
+}
+
+.wallet-topup-field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.wallet-topup-field input {
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    height: 42px;
+    padding: 0 12px;
+    outline: none;
+}
+
+.wallet-topup-field input:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.wallet-topup-note {
+    color: #4b5563;
+    margin: 0;
+}
+
+.wallet-topup-empty {
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 14px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .wallet-topup-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .wallet-topup-methods {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 2px;
+    }
+
+    .wallet-topup-methods button {
+        flex: initial;
+        width: 100%;
+        min-height: 44px;
+        height: auto;
+        padding: 8px 10px;
+        font-size: 13px;
+        line-height: 1.25;
+    }
+
+    .wallet-topup-submit-row {
+        justify-content: stretch;
+    }
+
+    .wallet-topup-submit-row .wallet-btn {
+        width: 100%;
+    }
+
+    .wallet-topup-inline-form,
+    .wallet-supported-bank-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .wallet-topup-card {
+        padding: 14px;
+    }
+
+    .wallet-topup-methods {
+        grid-template-columns: 1fr;
+    }
+
+    .wallet-topup-amount-box {
+        height: 52px;
+        padding: 0 10px;
+    }
+
+    .wallet-topup-amount-box input {
+        font-size: 18px;
+    }
+
+    .wallet-topup-quick-list button {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}

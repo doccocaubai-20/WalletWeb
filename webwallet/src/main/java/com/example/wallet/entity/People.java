@@ -33,4 +33,8 @@ public class People {
     @Column(length = 255)
     private String address;
 
+    @Lob
+    @Column(name = "AvatarUrl", columnDefinition = "LONGTEXT")
+    private String avatarUrl;
+
 }

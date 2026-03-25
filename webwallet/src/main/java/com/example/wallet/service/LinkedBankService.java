@@ -9,6 +9,7 @@ import com.example.wallet.repository.BankRepository;
 import com.example.wallet.repository.LinkedBankRepository;
 import com.example.wallet.repository.UserAccountRepository;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,31 @@ public class LinkedBankService {
     private final BankRepository bankRepository;
     
     public Bank addSupportedBank(Bank bank) {
+        String bankName = bank.getBankName() == null ? "" : bank.getBankName().trim();
+        String bankCode = bank.getBankCode() == null ? "" : bank.getBankCode().trim().toUpperCase(Locale.ROOT);
+
+        if (bankName.isBlank()) {
+            throw new RuntimeException("Tên ngân hàng không được để trống");
+        }
+
+        if (bankCode.isBlank()) {
+            throw new RuntimeException("Mã ngân hàng không được để trống");
+        }
+
+        if (bankRepository.existsByBankNameIgnoreCase(bankName)) {
+            throw new RuntimeException("Tên ngân hàng đã tồn tại");
+        }
+
+        if (bankRepository.existsByBankCodeIgnoreCase(bankCode)) {
+            throw new RuntimeException("Mã ngân hàng đã tồn tại");
+        }
+
+        bank.setBankName(bankName);
+        bank.setBankCode(bankCode);
+        if (bank.getLogoUrl() != null) {
+            bank.setLogoUrl(bank.getLogoUrl().trim());
+        }
+
         return bankRepository.save(bank);
     }
 

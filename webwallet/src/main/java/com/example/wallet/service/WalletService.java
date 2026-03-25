@@ -82,7 +82,7 @@ public class WalletService {
                 "VNPAY",
                 "Nạp tiền qua VNPAY",
                 code,
-                "TOPUP"
+                "VNPAY_TOPUP"
         );
 
         return new TransactionResultResponse("TOPUP_SUCCESS", code, account.getBalance());

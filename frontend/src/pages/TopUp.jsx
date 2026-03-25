@@ -1,7 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import WalletTopbar from '../components/WalletTopbar';
+import { parseApiErrorMessage } from '../utils/httpError';
+import {
+  validateLinkedBankRequest,
+  validateTopupRequest,
+  validateWithdrawRequest,
+} from '../utils/formValidation';
 import '../css/dashboard.css';
 
 const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000];
@@ -13,15 +21,32 @@ const sanitizeAmount = (value) => {
   return digits ? Number(digits) : 0;
 };
 
+const normalizeWithdrawError = (message) => {
+  const normalized = String(message || '').toUpperCase();
+  if (normalized.includes('INVALID_PIN')) {
+    return 'Mã PIN không đúng. Vui lòng kiểm tra lại.';
+  }
+  if (normalized.includes('INSUFFICIENT_BALANCE')) {
+    return 'Số dư không đủ để thực hiện rút tiền.';
+  }
+  return message;
+};
+
 const TopUp = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { logout } = useAuth();
+  const toast = useToast();
 
   const [method, setMethod] = useState('linked');
   const [amountInput, setAmountInput] = useState('200000');
   const [linkedBanks, setLinkedBanks] = useState([]);
+  const [supportedBanks, setSupportedBanks] = useState([]);
   const [selectedBankId, setSelectedBankId] = useState(null);
+  const [withdrawPin, setWithdrawPin] = useState('');
+  const [withdrawDescription, setWithdrawDescription] = useState('');
+  const [linkBankId, setLinkBankId] = useState('');
+  const [linkBankAccountInput, setLinkBankAccountInput] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [balance, setBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,32 +55,56 @@ const TopUp = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const amount = useMemo(() => sanitizeAmount(amountInput), [amountInput]);
+  const isAmountFlow = method === 'linked' || method === 'vnpay' || method === 'withdraw';
+  const headerTitle = useMemo(() => {
+    if (method === 'withdraw') return 'Rút tiền';
+    if (method === 'link-bank') return 'Thêm ngân hàng liên kết';
+    if (method === 'vnpay') return 'Nạp tiền qua VNPAY';
+    return 'Nạp tiền';
+  }, [method]);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
+  const clearMessages = useCallback(() => {
+    setErrorMsg('');
+    setSuccessMsg('');
+  }, []);
 
-  const loadTopupData = async () => {
-    setIsLoading(true);
+  const switchMethod = useCallback((nextMethod) => {
+    setMethod(nextMethod);
+    clearMessages();
+  }, [clearMessages]);
+
+  const loadTopupData = useCallback(async (showSkeleton = true) => {
+    if (showSkeleton) {
+      setIsLoading(true);
+    }
     setErrorMsg('');
 
     try {
-      const [accountResponse, banksResponse] = await Promise.all([
+      const [accountResponse, banksResponse, supportedBanksResponse] = await Promise.all([
         api.get('/api/accounts/my-account'),
         api.get('/api/banks/linked'),
+        api.get('/api/banks'),
       ]);
 
       const account = accountResponse.data;
       const banks = banksResponse.data || [];
+      const supported = supportedBanksResponse.data || [];
 
       setAccountNumber(account?.accountNumber || '');
       setBalance(Number(account?.balance || 0));
       setLinkedBanks(banks);
+      setSupportedBanks(supported);
 
-      if (banks.length > 0) {
-        setSelectedBankId(banks[0].id);
-      }
+      setSelectedBankId((current) => {
+        if (banks.length === 0) return null;
+        if (current && banks.some((bank) => bank.id === current)) return current;
+        return banks[0].id;
+      });
+
+      setLinkBankId((current) => {
+        if (current && supported.some((bank) => String(bank.id) === String(current))) return current;
+        return supported[0] ? String(supported[0].id) : '';
+      });
     } catch (error) {
       if (error.response?.status === 401) {
         await logout();
@@ -69,15 +118,17 @@ const TopUp = () => {
       }
 
       setErrorMsg('Không thể tải dữ liệu nạp tiền. Vui lòng thử lại.');
+      toast.error('Không thể tải dữ liệu nạp tiền. Vui lòng thử lại.');
     } finally {
-      setIsLoading(false);
+      if (showSkeleton) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [logout, navigate, toast]);
 
   useEffect(() => {
     loadTopupData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, logout]);
+  }, [loadTopupData]);
 
   useEffect(() => {
     const vnpayStatus = searchParams.get('vnpayStatus');
@@ -87,40 +138,49 @@ const TopUp = () => {
 
     const message = searchParams.get('message');
     const amountFromCallback = Number(searchParams.get('amount') || 0);
+    const txnRef = String(searchParams.get('txnRef') || '').trim();
+    const callbackKey = txnRef
+      ? `vnpay-callback-${txnRef}`
+      : `vnpay-callback-${vnpayStatus}-${amountFromCallback}-${message || ''}`;
+
+    if (sessionStorage.getItem(callbackKey) === '1') {
+      setSearchParams({}, { replace: true });
+      return;
+    }
+
+    sessionStorage.setItem(callbackKey, '1');
     setMethod('vnpay');
-    setErrorMsg('');
-    setSuccessMsg('');
+    clearMessages();
 
     if (vnpayStatus === 'success') {
-      setSuccessMsg(message || `Nạp tiền VNPAY thành công: ${formatVnd(amountFromCallback)}`);
-      loadTopupData();
+      const successMessage = message || `Nạp tiền VNPAY thành công: ${formatVnd(amountFromCallback)}`;
+      setSuccessMsg(successMessage);
+      toast.success(successMessage);
+      loadTopupData(false);
     } else {
-      setErrorMsg(message || 'Giao dịch VNPAY thất bại hoặc đã bị hủy.');
+      const failedMessage = message || 'Giao dịch VNPAY thất bại hoặc đã bị hủy.';
+      setErrorMsg(failedMessage);
+      toast.error(failedMessage);
     }
 
     setSearchParams({}, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, setSearchParams]);
+  }, [clearMessages, loadTopupData, searchParams, setSearchParams, toast]);
 
   const handleTopupByLinkedBank = async () => {
-    if (!selectedBankId) {
-      setErrorMsg('Vui lòng chọn ngân hàng liên kết.');
-      return;
-    }
-
-    if (!accountNumber) {
-      setErrorMsg('Không tìm thấy tài khoản ví để nạp tiền.');
-      return;
-    }
-
-    if (!amount || amount <= 0) {
-      setErrorMsg('Số tiền nạp phải lớn hơn 0.');
+    const validationMessage = validateTopupRequest({
+      selectedBankId,
+      accountNumber,
+      amount,
+      requireLinkedBank: true,
+    });
+    if (validationMessage) {
+      setErrorMsg(validationMessage);
+      toast.error(validationMessage);
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMsg('');
-    setSuccessMsg('');
+    clearMessages();
 
     try {
       const response = await api.post('/api/wallet/topup', {
@@ -130,7 +190,9 @@ const TopUp = () => {
         description: 'Nạp tiền ngân hàng liên kết',
       });
 
-      setSuccessMsg(`Nạp tiền thành công. Mã GD: ${response.data?.transactionCode || '---'}`);
+      const successMessage = `Nạp tiền thành công. Mã GD: ${response.data?.transactionCode || '---'}`;
+      setSuccessMsg(successMessage);
+      toast.success(successMessage);
       setBalance(Number(response.data?.balanceAfter || balance));
     } catch (error) {
       if (error.response?.status === 401) {
@@ -139,21 +201,29 @@ const TopUp = () => {
         return;
       }
 
-      setErrorMsg(error.response?.data?.message || error.response?.data || 'Nạp tiền thất bại.');
+      const message = parseApiErrorMessage(error, 'Nạp tiền thất bại.');
+      setErrorMsg(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleTopupByVNPay = async () => {
-    if (!amount || amount <= 0) {
-      setErrorMsg('Số tiền nạp phải lớn hơn 0.');
+    const validationMessage = validateTopupRequest({
+      selectedBankId,
+      accountNumber,
+      amount,
+      requireLinkedBank: false,
+    });
+    if (validationMessage) {
+      setErrorMsg(validationMessage);
+      toast.error(validationMessage);
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMsg('');
-    setSuccessMsg('');
+    clearMessages();
 
     try {
       const response = await api.get('/api/vnpay/create-payment', {
@@ -168,7 +238,9 @@ const TopUp = () => {
         return;
       }
 
-      setErrorMsg('Không tạo được liên kết thanh toán VNPAY.');
+      const message = 'Không tạo được liên kết thanh toán VNPAY.';
+      setErrorMsg(message);
+      toast.error(message);
     } catch (error) {
       if (error.response?.status === 401) {
         await logout();
@@ -176,7 +248,97 @@ const TopUp = () => {
         return;
       }
 
-      setErrorMsg('Khởi tạo thanh toán VNPAY thất bại.');
+      const message = parseApiErrorMessage(error, 'Khởi tạo thanh toán VNPAY thất bại.');
+      setErrorMsg(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleWithdrawByLinkedBank = async () => {
+    const validationMessage = validateWithdrawRequest({
+      selectedBankId,
+      accountNumber,
+      amount,
+      pin: withdrawPin,
+    });
+    if (validationMessage) {
+      setErrorMsg(validationMessage);
+      toast.error(validationMessage);
+      return;
+    }
+
+    setIsSubmitting(true);
+    clearMessages();
+
+    try {
+      const response = await api.post('/api/wallet/withdraw', {
+        accountNumber,
+        linkedBankId: selectedBankId,
+        amount,
+        pin: withdrawPin,
+        description: withdrawDescription.trim() || 'Rút tiền về ngân hàng liên kết',
+      });
+
+      const successMessage = `Rút tiền thành công. Mã GD: ${response.data?.transactionCode || '---'}`;
+      setSuccessMsg(successMessage);
+      toast.success(successMessage);
+      setBalance(Number(response.data?.balanceAfter || balance));
+      setWithdrawPin('');
+      setWithdrawDescription('');
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await logout();
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const baseMessage = parseApiErrorMessage(error, 'Rút tiền thất bại.');
+      const message = normalizeWithdrawError(baseMessage);
+      setErrorMsg(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLinkBank = async () => {
+    const validationMessage = validateLinkedBankRequest({
+      bankId: linkBankId,
+      bankAccountNumber: linkBankAccountInput,
+    });
+    if (validationMessage) {
+      setErrorMsg(validationMessage);
+      toast.error(validationMessage);
+      return;
+    }
+
+    setIsSubmitting(true);
+    clearMessages();
+
+    try {
+      const response = await api.post('/api/banks/link', {
+        bankId: Number(linkBankId),
+        accountNumber: linkBankAccountInput.trim(),
+      });
+
+      setSuccessMsg('Liên kết ngân hàng thành công. Bạn có thể nạp/rút ngay bây giờ.');
+      toast.success('Liên kết ngân hàng thành công.');
+      setMethod('linked');
+      setSelectedBankId(response.data?.id ?? null);
+      setLinkBankAccountInput('');
+      await loadTopupData(false);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await logout();
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const message = parseApiErrorMessage(error, 'Liên kết ngân hàng thất bại.');
+      setErrorMsg(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -192,83 +354,85 @@ const TopUp = () => {
 
   return (
     <div className="wallet-dashboard-shell">
-      <header className="wallet-topbar">
-        <div className="wallet-brand">
-          <div className="wallet-brand-icon">N</div>
-          <span>NovaPay</span>
-        </div>
-        <nav className="wallet-nav-links">
-          <NavLink to="/dashboard/customer" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-house-door me-1"></i>Trang chủ</NavLink>
-          <NavLink to="/topup" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-plus-circle me-1"></i>Nạp tiền</NavLink>
-          <NavLink to="/transfer" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-arrow-left-right me-1"></i>Chuyển tiền</NavLink>
-          <button type="button"><i className="bi bi-clock-history me-1"></i>Lịch sử</button>
-          <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-person me-1"></i>Hồ sơ</NavLink>
-        </nav>
-        <div className="wallet-top-actions">
-          <button type="button" className="wallet-icon-btn"><i className="bi bi-bell"></i></button>
-          <button type="button" className="wallet-logout-top-btn" onClick={handleLogout}>
-            <i className="bi bi-box-arrow-right"></i>
-            Đăng xuất
-          </button>
-        </div>
-      </header>
+      <WalletTopbar />
 
       <main className="wallet-dashboard-body">
-        <section className="wallet-topup-wrap wallet-fade-up">
-          <div className="wallet-topup-head">
-            <div>
-              <h1>Nạp tiền</h1>
-              <p>Số dư hiện tại: <strong>{formatVnd(balance)}</strong></p>
-            </div>
-            <Link to="/dashboard/customer" className="wallet-topup-back">
-              <i className="bi bi-arrow-left"></i>
-              Quay lại dashboard
-            </Link>
-          </div>
+        {errorMsg && <div className="alert alert-danger mb-3">{errorMsg}</div>}
+        {successMsg && <div className="alert alert-success mb-3">{successMsg}</div>}
 
-          {errorMsg && <div className="alert alert-danger mt-3 mb-3">{errorMsg}</div>}
-          {successMsg && <div className="alert alert-success mt-3 mb-3">{successMsg}</div>}
-
-          <div className="wallet-topup-card">
-            <h3>Nhập số tiền cần nạp</h3>
-            <div className="wallet-topup-amount-box">
-              <input
-                type="text"
-                value={amountInput}
-                onChange={(e) => setAmountInput(e.target.value)}
-                placeholder="0"
-              />
-              <span>VND</span>
-            </div>
-
-            <div className="wallet-topup-quick-list">
-              {QUICK_AMOUNTS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={amount === value ? 'active' : ''}
-                  onClick={() => setAmountInput(String(value))}
-                >
-                  {formatVnd(value)}
-                </button>
-              ))}
+        <section className="wallet-topup-wrap wallet-transfer-wrap wallet-fade-up">
+          <div className="wallet-transfer-hero">
+            <div className="wallet-transfer-head">
+              <div className="wallet-transfer-head-content">
+                <h1>{headerTitle}</h1>
+                <div className="wallet-transfer-head-meta">
+                  <p>Tài khoản nguồn: <strong>{accountNumber || '---'}</strong></p>
+                  <p>Số dư khả dụng: <strong>{formatVnd(balance)}</strong></p>
+                </div>
+              </div>
+              <Link to="/dashboard/customer" className="wallet-topup-back btn btn-outline-secondary">
+                <i className="bi bi-arrow-left"></i>
+                Quay lại dashboard
+              </Link>
             </div>
           </div>
+
+          {isAmountFlow && (
+            <div className="wallet-topup-card">
+              <h3>{method === 'withdraw' ? 'Nhập số tiền cần rút' : 'Nhập số tiền cần nạp'}</h3>
+              <div className="wallet-topup-amount-box">
+                <input
+                  type="text"
+                  value={amountInput}
+                  onChange={(e) => setAmountInput(e.target.value)}
+                  placeholder="0"
+                />
+                <span>VND</span>
+              </div>
+
+              <div className="wallet-topup-quick-list">
+                {QUICK_AMOUNTS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={amount === value ? 'active' : ''}
+                    onClick={() => setAmountInput(String(value))}
+                  >
+                    {formatVnd(value)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="wallet-topup-methods">
             <button
               type="button"
               className={method === 'linked' ? 'active' : ''}
-              onClick={() => setMethod('linked')}
+              onClick={() => switchMethod('linked')}
             >
-              Nạp tiền ngân hàng liên kết
+              Nạp tiền ngân hàng
             </button>
             <button
               type="button"
               className={method === 'vnpay' ? 'active' : ''}
-              onClick={() => setMethod('vnpay')}
+              onClick={() => switchMethod('vnpay')}
             >
               Nạp tiền qua VNPAY
+            </button>
+            <button
+              type="button"
+              className={method === 'withdraw' ? 'active' : ''}
+              onClick={() => switchMethod('withdraw')}
+            >
+              Rút tiền
+            </button>
+            <button
+              type="button"
+              className={method === 'link-bank' ? 'active' : ''}
+              onClick={() => switchMethod('link-bank')}
+            >
+              Thêm ngân hàng liên kết
             </button>
           </div>
 
@@ -302,7 +466,7 @@ const TopUp = () => {
               <div className="wallet-topup-submit-row">
                 <button
                   type="button"
-                  className="wallet-btn wallet-btn-primary"
+                  className="wallet-btn wallet-btn-primary btn btn-primary"
                   onClick={handleTopupByLinkedBank}
                   disabled={isSubmitting || linkedBanks.length === 0}
                 >
@@ -320,7 +484,7 @@ const TopUp = () => {
               <div className="wallet-topup-submit-row">
                 <button
                   type="button"
-                  className="wallet-btn wallet-btn-primary"
+                  className="wallet-btn wallet-btn-primary btn btn-primary"
                   onClick={handleTopupByVNPay}
                   disabled={isSubmitting}
                 >
@@ -329,11 +493,129 @@ const TopUp = () => {
               </div>
             </div>
           )}
+
+          {method === 'withdraw' && (
+            <div className="wallet-topup-card wallet-fade-up wallet-delay-1">
+              <div className="wallet-topup-bank-head">
+                <h3>Rút tiền về ngân hàng liên kết</h3>
+                <small>{linkedBanks.length} ngân hàng khả dụng</small>
+              </div>
+
+              {linkedBanks.length === 0 && (
+                <div className="wallet-topup-empty">Bạn chưa liên kết ngân hàng. Vui lòng thêm ngân hàng trước khi rút tiền.</div>
+              )}
+
+              {linkedBanks.length > 0 && (
+                <div className="wallet-linked-bank-grid">
+                  {linkedBanks.map((bank) => (
+                    <button
+                      key={bank.id}
+                      type="button"
+                      className={`wallet-linked-bank-item ${selectedBankId === bank.id ? 'active' : ''}`}
+                      onClick={() => setSelectedBankId(bank.id)}
+                    >
+                      <span className="bank-name">{bank.bankName}</span>
+                      <small>{bank.maskedAccountNumber}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="wallet-topup-inline-form">
+                <div className="wallet-topup-field">
+                  <label htmlFor="withdrawDescription">Nội dung rút tiền</label>
+                  <input
+                    id="withdrawDescription"
+                    type="text"
+                    value={withdrawDescription}
+                    onChange={(e) => setWithdrawDescription(e.target.value)}
+                    placeholder="Ví dụ: Rút tiền chi tiêu cá nhân"
+                  />
+                </div>
+
+                <div className="wallet-topup-field">
+                  <label htmlFor="withdrawPin">Mã PIN</label>
+                  <input
+                    id="withdrawPin"
+                    type="password"
+                    value={withdrawPin}
+                    onChange={(e) => setWithdrawPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="••••••"
+                    maxLength={6}
+                  />
+                </div>
+              </div>
+
+              <div className="wallet-topup-submit-row">
+                <button
+                  type="button"
+                  className="wallet-btn wallet-btn-primary btn btn-primary"
+                  onClick={handleWithdrawByLinkedBank}
+                  disabled={isSubmitting || linkedBanks.length === 0}
+                >
+                  {isSubmitting ? 'Đang xử lý...' : `Rút ${formatVnd(amount)}`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {method === 'link-bank' && (
+            <div className="wallet-topup-card wallet-fade-up wallet-delay-1">
+              <div className="wallet-topup-bank-head">
+                <h3>Thêm ngân hàng liên kết</h3>
+                <small>{supportedBanks.length} ngân hàng hỗ trợ</small>
+              </div>
+
+              {supportedBanks.length === 0 && (
+                <div className="wallet-topup-empty">Hiện chưa có ngân hàng hỗ trợ. Vui lòng thử lại sau.</div>
+              )}
+
+              {supportedBanks.length > 0 && (
+                <div className="wallet-supported-bank-grid">
+                  {supportedBanks.map((bank) => (
+                    <button
+                      key={bank.id}
+                      type="button"
+                      className={`wallet-linked-bank-item ${String(linkBankId) === String(bank.id) ? 'active' : ''}`}
+                      onClick={() => setLinkBankId(String(bank.id))}
+                    >
+                      <span className="bank-name">{bank.bankName}</span>
+                      <small>{bank.bankCode}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="wallet-topup-inline-form">
+                <div className="wallet-topup-field full">
+                  <label htmlFor="linkBankAccount">Số tài khoản ngân hàng</label>
+                  <input
+                    id="linkBankAccount"
+                    type="text"
+                    value={linkBankAccountInput}
+                    onChange={(e) => setLinkBankAccountInput(e.target.value.replace(/\s+/g, '').slice(0, 30))}
+                    placeholder="Nhập số tài khoản ngân hàng cần liên kết"
+                  />
+                </div>
+              </div>
+
+              <div className="wallet-topup-submit-row">
+                <button
+                  type="button"
+                  className="wallet-btn wallet-btn-primary btn btn-primary"
+                  onClick={handleLinkBank}
+                  disabled={isSubmitting || supportedBanks.length === 0}
+                >
+                  {isSubmitting ? 'Đang xử lý...' : 'Liên kết ngân hàng'}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       </main>
 
       <footer className="wallet-footer">
-        <p>© 2024 NovaPay. Bảo mật và an toàn giao dịch.</p>
+        <p>© 2026 NovaPay. Bảo mật và an toàn giao dịch.</p>
         <span>Điều khoản   Chính sách bảo mật   Hỗ trợ (1900 xxxx)</span>
       </footer>
     </div>

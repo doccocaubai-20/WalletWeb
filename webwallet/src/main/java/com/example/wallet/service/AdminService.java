@@ -18,6 +18,8 @@ import com.example.wallet.repository.UserAccountRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -28,16 +30,27 @@ public class AdminService {
     private final AccountRepository accountRepository;
 
 
-    public Page<AdminUserResponse> getUsersByRole(String role,int page,int size){
+    public Page<AdminUserResponse> getUsersByRole(String role,int page,int size, String keyword){
         Pageable pageable = PageRequest.of(page , size );
+        String normalizedKeyword = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
 
-        Page<UserAccount> listUsers = userAccountRepository.findByRoleOrderByUserIDAsc(role,pageable);
+        Page<UserAccount> listUsers;
+        if (normalizedKeyword.isBlank()) {
+            listUsers = userAccountRepository.findByRoleOrderByUserIDAsc(role,pageable);
+        } else {
+            listUsers = userAccountRepository.searchByRoleAndKeyword(role, normalizedKeyword, pageable);
+        }
+
 
         return listUsers.map(t -> {
            AdminUserResponse dto = new AdminUserResponse();
            if (t.getPeople() != null) {
                 dto.setEmail(t.getPeople().getEmail());
                 dto.setFullName(t.getPeople().getFullName());
+                dto.setPhoneNumber(t.getPeople().getPhoneNumber());
+                dto.setAddress(t.getPeople().getAddress());
+                dto.setGender(t.getPeople().getGender());
+                dto.setDateOfBirth(t.getPeople().getDateOfBirth());
             }
            dto.setRole(t.getRole());
            dto.setStatus(t.getStatus());

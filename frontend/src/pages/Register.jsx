@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { parseApiErrorMessage } from '../utils/httpError';
+import '../css/auth.css';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -11,7 +13,7 @@ const Register = () => {
         fullName: '',
         idCard: '',
         dateOfBirth: '',
-        phone: '',
+        phoneNumber: '',
         email: '',
         address: '',
         gender: '',
@@ -28,7 +30,6 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Xử lý chuyển bước
     const handleNextStep = () => {
         setStep(2);
         setErrorMsg('');
@@ -39,7 +40,6 @@ const Register = () => {
         setErrorMsg('');
     };
 
-    // Xử lý submit form gọi API Backend
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -56,17 +56,7 @@ const Register = () => {
             alert('Đăng ký thành công! Đang chuyển về trang đăng nhập...');
             navigate('/login');
         } catch (error) {
-            if (error.response && error.response.data) {
-                const data = error.response.data;
-                if (typeof data === 'object') {
-                    const firstError = Object.values(data)[0];
-                    setErrorMsg(firstError);
-                } else {
-                    setErrorMsg(data);
-                }
-            } else {
-                setErrorMsg("Không thể kết nối đến máy chủ.");
-            }
+            setErrorMsg(parseApiErrorMessage(error, 'Đăng ký thất bại. Vui lòng thử lại.'));
         } finally {
             setIsLoading(false);
         }

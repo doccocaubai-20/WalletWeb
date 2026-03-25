@@ -202,7 +202,8 @@ public class VNPayController {
         String redirectUrl = frontendTopupUrl
                 + "?vnpayStatus=" + URLEncoder.encode(status, StandardCharsets.UTF_8)
                 + "&amount=" + realAmount
-                + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
+            + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8)
+            + "&txnRef=" + URLEncoder.encode(txnRef == null ? "" : txnRef, StandardCharsets.UTF_8);
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(redirectUrl))

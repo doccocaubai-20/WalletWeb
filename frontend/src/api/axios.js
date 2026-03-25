@@ -4,7 +4,7 @@ const instance = axios.create({
     baseURL: '', 
 });
 
-const AUTH_ENDPOINT_PATTERN = /\/api\/users\/(login|refresh-token|register|forgot-password|reset-password)$/;
+const AUTH_ENDPOINT_PATTERN = /\/api\/users\/(login|refresh-token|register|forgot-password|verify-otp|reset-password)$/;
 
 const rememberApiError = (error, stage = 'response') => {
     try {

@@ -5,17 +5,24 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import CustomerDashboard from './pages/CustomerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminHome from './pages/AdminHome';
 import TopUp from './pages/TopUp';
+import Transactions from './pages/Transactions';
+import Transfer from './pages/Transfer';
+import Profile from './pages/Profile';
+import Services from './pages/Services';
+import AdminServices from './pages/AdminServices';
+import ForgotPassword from './pages/ForgotPassword';
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, isInitializing, userRole } = useAuth();
 
   if (isInitializing) {
-    return <div className="text-center mt-5">Dang tai phien dang nhap...</div>;
+    return <div className="text-center mt-5">Đang tải phiên đăng nhập...</div>;
   }
 
   if (isAuthenticated && !userRole) {
-    return <div className="text-center mt-5">Dang tai vai tro nguoi dung...</div>;
+    return <div className="text-center mt-5">Đang tải vai trò người dùng...</div>;
   }
 
   if (isAuthenticated) {
@@ -29,7 +36,7 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   const { isAuthenticated, isInitializing, userRole } = useAuth();
 
   if (isInitializing) {
-    return <div className="text-center mt-5">Dang tai phien dang nhap...</div>;
+    return <div className="text-center mt-5">Đang tải phiên đăng nhập...</div>;
   }
 
   if (!isAuthenticated) {
@@ -51,7 +58,7 @@ function RoleBasedDashboard() {
   const { userRole } = useAuth();
 
   if (!userRole) {
-    return <div className="text-center mt-5">Dang tai vai tro nguoi dung...</div>;
+    return <div className="text-center mt-5">Đang tải vai trò người dùng...</div>;
   }
 
   if (userRole === 'ADMIN') {
@@ -64,9 +71,9 @@ function RoleBasedDashboard() {
 function Unauthorized() {
   return (
     <div className="container py-5 text-center">
-      <h2 className="fw-bold mb-3">Khong co quyen truy cap</h2>
-      <p className="text-muted mb-4">Tai khoan cua ban khong co quyen vao trang nay.</p>
-      <a href="/dashboard" className="btn btn-primary-custom">Quay lai Dashboard</a>
+      <h2 className="fw-bold mb-3">Không có quyền truy cập</h2>
+      <p className="text-muted mb-4">Tài khoản của bạn không có quyền vào trang này.</p>
+      <a href="/dashboard" className="btn btn-primary-custom">Quay lại Dashboard</a>
     </div>
   );
 }
@@ -86,6 +93,15 @@ function App() {
           }
         />
         
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicOnlyRoute>
+              <ForgotPassword />
+            </PublicOnlyRoute>
+          }
+        />
+
         <Route
           path="/register"
           element={
@@ -132,10 +148,64 @@ function App() {
         />
 
         <Route
+          path="/transfer"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <Transfer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <Transactions />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/services"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <Services />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/admin"
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminHome />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/admin/services"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminServices />
             </ProtectedRoute>
           }
         />
