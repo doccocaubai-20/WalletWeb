@@ -4,12 +4,16 @@ import com.example.wallet.dto.LinkedBankRequest;
 import com.example.wallet.dto.LinkedBankResponse;
 import com.example.wallet.entity.Bank;
 import com.example.wallet.service.LinkedBankService;
+
+import io.swagger.v3.oas.models.links.Link;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,5 +40,9 @@ public class BankController {
     public ResponseEntity<LinkedBankResponse> linkBank(Principal principal,
                                                        @Valid @RequestBody LinkedBankRequest request) {
         return ResponseEntity.ok(linkedBankService.linkBank(principal.getName(), request));
+    }
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deleteLinkedBank(Principal principal,@Valid @PathVariable("id") Integer linkedBankID){
+        return ResponseEntity.ok(linkedBankService.deleteLinkedBank(principal.getName(),linkedBankID));
     }
 }

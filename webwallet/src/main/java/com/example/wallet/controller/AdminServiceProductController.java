@@ -43,4 +43,9 @@ public class AdminServiceProductController {
         serviceProductService.deleteService(serviceId);
         return ResponseEntity.ok("Đã khóa dịch vụ (INACTIVE)");
     }
+
+    @PostMapping("/{serviceId}/hot/increase")
+    public ResponseEntity<?> increaseHotScore(@PathVariable Integer serviceId) {
+        return ResponseEntity.ok(serviceProductService.increaseHotScore(serviceId));
+    }
 }

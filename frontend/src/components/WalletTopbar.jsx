@@ -109,6 +109,7 @@ const WalletTopbar = () => {
         <nav className="wallet-nav-links">
           <NavLink to="/dashboard/customer" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-house-door me-1"></i>Trang chủ</NavLink>
           <NavLink to="/topup" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-plus-circle me-1"></i>Nạp/Rút</NavLink>
+          <NavLink to="/linked-banks" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-bank me-1"></i>Ngân hàng LK</NavLink>
           <NavLink to="/transfer" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-arrow-left-right me-1"></i>Chuyển tiền</NavLink>
           <NavLink to="/services" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-grid me-1"></i>Dịch vụ</NavLink>
           <NavLink to="/transactions" className={({ isActive }) => (isActive ? 'active' : '')}><i className="bi bi-clock-history me-1"></i>Lịch sử</NavLink>
@@ -176,6 +177,7 @@ const WalletTopbar = () => {
           <nav className="wallet-mobile-nav-links">
             <NavLink to="/dashboard/customer" onClick={() => setIsMobileMenuOpen(false)}><i className="bi bi-house-door"></i>Trang chủ</NavLink>
             <NavLink to="/topup" onClick={() => setIsMobileMenuOpen(false)}><i className="bi bi-plus-circle"></i>Nạp/Rút</NavLink>
+            <NavLink to="/linked-banks" onClick={() => setIsMobileMenuOpen(false)}><i className="bi bi-bank"></i>Ngân hàng LK</NavLink>
             <NavLink to="/transfer" onClick={() => setIsMobileMenuOpen(false)}><i className="bi bi-arrow-left-right"></i>Chuyển tiền</NavLink>
             <NavLink to="/services" onClick={() => setIsMobileMenuOpen(false)}><i className="bi bi-grid"></i>Dịch vụ</NavLink>
             <NavLink to="/transactions" onClick={() => setIsMobileMenuOpen(false)}><i className="bi bi-clock-history"></i>Lịch sử</NavLink>

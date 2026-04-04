@@ -9,5 +9,5 @@ import com.example.wallet.entity.ServiceProduct;
 
 @Repository
 public interface ServiceProductRepository extends JpaRepository<ServiceProduct, Integer> {
-    List<ServiceProduct> findByStatusOrderByServiceIdAsc(String status);
+    List<ServiceProduct> findByStatusOrderByHotScoreDescServiceIdAsc(String status);
 }

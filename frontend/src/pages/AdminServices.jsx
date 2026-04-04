@@ -32,6 +32,7 @@ const AdminServices = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBankSubmitting, setIsBankSubmitting] = useState(false);
+  const [hotUpdatingServiceId, setHotUpdatingServiceId] = useState(null);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [supportedBanks, setSupportedBanks] = useState([]);
@@ -110,6 +111,21 @@ const AdminServices = () => {
     setSelectedServiceId(null);
     setForm(EMPTY_FORM);
   };
+
+  // const handleIncreaseHot = async (service) => {
+  //   setHotUpdatingServiceId(service.serviceId);
+  //   try {
+  //     await api.post(`/api/admin/service-products/${service.serviceId}/hot/increase`);
+  //     toast.success(`Đã tăng điểm hot cho dịch vụ "${service.serviceName}".`);
+  //     await loadServices();
+  //   } catch (error) {
+  //     const isHandled = await handleAuthNavigation(error);
+  //     if (isHandled) return;
+  //     toast.error(parseApiErrorMessage(error, 'Không thể tăng điểm hot cho dịch vụ.'));
+  //   } finally {
+  //     setHotUpdatingServiceId(null);
+  //   }
+  // };
 
   const handleAddSupportedBank = async (event) => {
     event.preventDefault();
@@ -213,6 +229,7 @@ const AdminServices = () => {
                           <th>Tên dịch vụ</th>
                           <th>Danh mục</th>
                           <th>Giá</th>
+                          <th>Hot</th>
                           <th>Trạng thái</th>
                           <th className="text-end">Thao tác</th>
                         </tr>
@@ -220,7 +237,7 @@ const AdminServices = () => {
                       <tbody>
                         {services.length === 0 && (
                           <tr>
-                            <td colSpan="6" className="text-center text-muted py-4">Chưa có dịch vụ</td>
+                            <td colSpan="7" className="text-center text-muted py-4">Chưa có dịch vụ</td>
                           </tr>
                         )}
 
@@ -231,6 +248,9 @@ const AdminServices = () => {
                             <td>{service.category}</td>
                             <td>{formatVnd(service.price)}</td>
                             <td>
+                              <span className="badge text-bg-warning">{service.hotScore || 0}</span>
+                            </td>
+                            <td>
                               <span className={`badge ${service.status === 'ACTIVE' ? 'text-bg-success' : 'text-bg-secondary'}`}>
                                 {service.status}
                               </span>
@@ -240,6 +260,14 @@ const AdminServices = () => {
                                 <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => handleSelectService(service)}>
                                   Sửa
                                 </button>
+                                {/* <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-warning"
+                                  onClick={() => handleIncreaseHot(service)}
+                                  disabled={hotUpdatingServiceId === service.serviceId}
+                                >
+                                  {hotUpdatingServiceId === service.serviceId ? 'Đang tăng...' : 'Tăng hot'}
+                                </button> */}
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-outline-danger"

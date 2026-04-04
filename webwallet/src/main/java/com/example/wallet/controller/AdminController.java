@@ -6,6 +6,7 @@ import com.example.wallet.entity.Bank;
 import com.example.wallet.entity.TransactionType;
 import com.example.wallet.service.AdminService;
 import com.example.wallet.service.LinkedBankService;
+import com.example.wallet.service.TransactionService;
 import com.example.wallet.service.TransactionTypeService;
 
 import jakarta.validation.Valid;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AdminController {
 
+    private final TransactionService transactionService;
     private final LinkedBankService linkedBankService;
     private final AdminService adminService;
     private final TransactionTypeService transactionTypeService;
+
     @PostMapping("/banks")
     public ResponseEntity<Bank> addSupportedBank(@RequestBody Bank bank) {
         return ResponseEntity.ok(linkedBankService.addSupportedBank(bank));
@@ -60,4 +63,10 @@ public class AdminController {
     public ResponseEntity<?> addService(@Valid @RequestBody TransactionType service){
         return ResponseEntity.ok(transactionTypeService.addService(service));
     }
+
+    @GetMapping("/transactions/recent")
+    public ResponseEntity<?> getRecentTransactions(@RequestParam(defaultValue = "month") String window,@RequestParam(defaultValue = "8") int limit){
+        return ResponseEntity.ok(transactionService.getRecentSystemTransactions(window,limit));
+    }
+
 }

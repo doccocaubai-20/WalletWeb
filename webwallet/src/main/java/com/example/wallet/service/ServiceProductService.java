@@ -40,7 +40,7 @@ public class ServiceProductService {
     }
 
     public List<ServiceProduct> getAllForCustomer() {
-        return serviceProductRepository.findByStatusOrderByServiceIdAsc("ACTIVE");
+        return serviceProductRepository.findByStatusOrderByHotScoreDescServiceIdAsc("ACTIVE");
     }
 
     @Transactional
@@ -127,6 +127,12 @@ public class ServiceProductService {
 
         transactionsRepository.save(transaction);
 
+        // Every successful customer purchase boosts hot score to reflect demand.
+        int currentHotScore = service.getHotScore() == null ? 0 : service.getHotScore();
+        int purchasedQuantity = Math.max(request.getQuantity(), 1);
+        service.setHotScore(currentHotScore + purchasedQuantity);
+        serviceProductRepository.save(service);
+
         return new TransactionResultResponse("SERVICE_PURCHASE_SUCCESS", transaction.getTransactionCode(), account.getBalance());
     }
 
@@ -166,5 +172,15 @@ public class ServiceProductService {
 
         service.setStatus("INACTIVE");
         serviceProductRepository.save(service);
+    }
+
+    @Transactional
+    public ServiceProduct increaseHotScore(Integer serviceId) {
+        ServiceProduct service = serviceProductRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ"));
+
+        int currentHotScore = service.getHotScore() == null ? 0 : service.getHotScore();
+        service.setHotScore(currentHotScore + 1);
+        return serviceProductRepository.save(service);
     }
 }

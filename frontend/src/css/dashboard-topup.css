@@ -84,21 +84,20 @@
 }
 
 .wallet-topup-methods {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 12px;
 }
 
 .wallet-topup-methods button {
-    flex: 0 1 220px;
     border: 1px solid #d1d5db;
     border-radius: 12px;
     background: #fff;
     color: #374151;
     font-weight: 700;
     height: 44px;
+    width: 100%;
 }
 
 .wallet-topup-methods button.active {
@@ -154,6 +153,75 @@
 .wallet-linked-bank-item small {
     color: #6b7280;
     font-size: 12px;
+}
+
+.wallet-linked-bank-card {
+    background: #ffffff;
+    border-color: #dbe1ea;
+    box-shadow: none;
+}
+
+.wallet-linked-bank-meta {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.wallet-bank-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    height: 22px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.wallet-bank-status.active {
+    background: #ecfdf3;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.wallet-bank-status.inactive {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.wallet-linked-bank-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wallet-unlink-btn {
+    border: 1px solid #fca5a5;
+    background: #ffffff;
+    color: #dc2626;
+    border-radius: 999px;
+    height: 34px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.wallet-unlink-btn:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+.wallet-unlink-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .wallet-topup-submit-row {
@@ -246,6 +314,19 @@
     .wallet-topup-inline-form,
     .wallet-supported-bank-grid {
         grid-template-columns: 1fr;
+    }
+
+    .wallet-linked-bank-meta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .wallet-linked-bank-actions {
+        justify-content: stretch;
+    }
+
+    .wallet-unlink-btn {
+        width: 100%;
     }
 }
 

@@ -4,6 +4,7 @@ import com.example.wallet.entity.Transactions;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -45,4 +46,13 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Inte
     BigDecimal sumOutgoingByAccountAndDateRange(@Param("accountNumber") String accountNumber,
                                 @Param("startDate") LocalDateTime startDate,
                                 @Param("endDate") LocalDateTime endDate);
+    @EntityGraph(attributePaths = {"account", "transactionType"})
+    @Query("""
+            SELECT t FROM Transactions t
+            WHERE t.createdDate >= :fromTime
+            ORDER BY t.createdDate  DESC, t.transID DESC
+            """)
+    Page<Transactions> findRecentSystemTransactions(@Param("fromTime") LocalDateTime localDateTime,
+                                Pageable pageable);
+
 }

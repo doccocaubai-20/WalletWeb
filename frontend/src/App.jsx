@@ -7,6 +7,7 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminHome from './pages/AdminHome';
 import TopUp from './pages/TopUp';
+import LinkedBanks from './pages/LinkedBanks';
 import Transactions from './pages/Transactions';
 import Transfer from './pages/Transfer';
 import Profile from './pages/Profile';
@@ -143,6 +144,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['CUSTOMER']}>
               <TopUp />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/linked-banks"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <LinkedBanks />
             </ProtectedRoute>
           }
         />

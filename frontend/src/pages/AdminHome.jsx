@@ -13,6 +13,8 @@ const AdminHome = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [timeWindow, setTimeWindow] = useState('month');
+  const [activityLimitInput, setActivityLimitInput] = useState('8');
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const [overview, setOverview] = useState({
     customerTotal: 0,
     adminTotal: 0,
@@ -45,28 +47,41 @@ const AdminHome = () => {
     return '30 ngày gần đây';
   }, [timeWindow]);
 
+  const activityLimit = useMemo(() => {
+    const parsed = Number(activityLimitInput);
+    if (!Number.isFinite(parsed)) return 8;
+    return Math.max(1, Math.min(Math.floor(parsed), 100));
+  }, [activityLimitInput]);
+
+  const formatVnd = (amount) => `${Number(amount || 0).toLocaleString('vi-VN')} VND`;
+
+  const formatDateTime = (rawDate) => {
+    if (!rawDate) return 'Không rõ thời gian';
+    const dt = new Date(rawDate);
+    if (Number.isNaN(dt.getTime())) return 'Không rõ thời gian';
+    return dt.toLocaleString('vi-VN');
+  };
+
   const recentActivities = useMemo(() => {
-    const users = [...overview.customerRows, ...overview.adminRows]
-      .map((user) => ({
-        id: `user-${user.userID}`,
-        title: user.fullName || user.username || 'Người dùng',
-        subtitle: `${user.role || 'USER'} • ${user.status || 'UNKNOWN'}`,
-        tag: 'Tài khoản',
-        sort: Number(user.userID || 0),
-      }));
+    return (recentTransactions || []).map((tx, index) => {
+      const txType = String(tx.type || '').toUpperCase() === 'IN' ? 'IN' : 'OUT';
+      const sign = txType === 'IN' ? '+' : '-';
+      const amountLabel = `${sign}${formatVnd(Math.abs(Number(tx.amount || 0)))}`;
+      const status = String(tx.status || 'UNKNOWN').toUpperCase();
+      const title = tx.description || `Giao dịch ${tx.transactionCode || ''}`.trim();
+      const accountLabel = tx.accountNumber ? `TK ${tx.accountNumber}` : 'TK không xác định';
+      const relatedLabel = tx.relatedParty ? `Đối ứng ${tx.relatedParty}` : 'Không có đối ứng';
 
-    const services = (overview.serviceRows || []).map((service) => ({
-      id: `svc-${service.serviceId}`,
-      title: service.serviceName,
-      subtitle: `${service.category || 'Khác'} • ${String(service.status || '').toUpperCase()}`,
-      tag: 'Dịch vụ',
-      sort: Number(service.serviceId || 0),
-    }));
-
-    return [...users, ...services]
-      .sort((a, b) => b.sort - a.sort)
-      .slice(0, 8);
-  }, [overview.adminRows, overview.customerRows, overview.serviceRows]);
+      return {
+        id: tx.transactionCode || `tx-${index}`,
+        title,
+        subtitle: `${amountLabel} • ${status} • ${accountLabel}`,
+        tag: txType === 'IN' ? 'Tiền vào' : 'Tiền ra',
+        createdDate: tx.createdDate,
+        meta: `${relatedLabel} • ${formatDateTime(tx.createdDate)}`,
+      };
+    });
+  }, [recentTransactions]);
 
   const warningItems = useMemo(() => {
     const inactiveServices = Math.max(overview.serviceTotal - overview.activeServiceTotal, 0);
@@ -94,7 +109,7 @@ const AdminHome = () => {
         key: 'coverage',
         level: 'info',
         title: 'Phạm vi dữ liệu',
-        detail: `Hiển thị theo ${periodLabel} (không cần thêm API mới).`,
+        detail: `Hiển thị theo ${periodLabel} (dữ liệu giao dịch lấy từ API recent).`,
       },
     ];
   }, [overview.activeServiceTotal, overview.adminRows, overview.customerRows, overview.serviceTotal, periodLabel]);
@@ -191,10 +206,45 @@ const AdminHome = () => {
     }
   };
 
+  const loadRecentActivities = async () => {
+    try {
+      const response = await api.get('/api/admin/transactions/recent', {
+        params: {
+          window: timeWindow,
+          limit: activityLimit,
+        },
+      });
+
+      setRecentTransactions(response.data || []);
+    } catch (error) {
+      if (error?.response?.status === 401) {
+        await logout();
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      if (error?.response?.status === 403) {
+        navigate('/unauthorized', { replace: true });
+        return;
+      }
+
+      setErrorMsg(parseApiErrorMessage(error, 'Không thể tải hoạt động giao dịch gần đây.'));
+    }
+  };
+
+  const handleRefresh = async () => {
+    await Promise.all([loadOverview(), loadRecentActivities()]);
+  };
+
   useEffect(() => {
     loadOverview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    loadRecentActivities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeWindow, activityLimit]);
 
   const handleLogout = async () => {
     await logout();
@@ -203,7 +253,7 @@ const AdminHome = () => {
 
   return (
     <div className="wallet-dashboard-shell admin-dashboard-shell">
-      <AdminTopbar activeTab="home" onRefresh={loadOverview} onLogout={handleLogout} />
+      <AdminTopbar activeTab="home" onRefresh={handleRefresh} onLogout={handleLogout} />
 
       <main className="wallet-dashboard-body">
         <section className="admin-hero-card wallet-fade-up">
@@ -213,14 +263,9 @@ const AdminHome = () => {
             <p className="admin-hero-sub">Theo dõi nhanh tình hình hệ thống và truy cập các khu vực quản trị chỉ với một lần bấm.</p>
           </div>
           <div className="admin-hero-actions">
-            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={loadOverview}>
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleRefresh}>
               Làm mới tổng quan
             </button>
-            <select className="form-select form-select-sm" value={timeWindow} onChange={(e) => setTimeWindow(e.target.value)}>
-              <option value="day">Theo ngày</option>
-              <option value="week">Theo tuần</option>
-              <option value="month">Theo tháng</option>
-            </select>
           </div>
         </section>
 
@@ -311,7 +356,36 @@ const AdminHome = () => {
           <article className="wallet-history-card admin-home-card">
             <div className="wallet-history-head">
               <h3>Hoạt động gần đây</h3>
-              <span className="admin-filter-pill">{periodLabel}</span>
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <select
+                  className="form-select form-select-sm"
+                  style={{ minWidth: '130px' }}
+                  value={timeWindow}
+                  onChange={(e) => setTimeWindow(e.target.value)}
+                >
+                  <option value="day">Theo ngày</option>
+                  <option value="week">Theo tuần</option>
+                  <option value="month">Theo tháng</option>
+                </select>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  className="form-control form-control-sm"
+                  style={{ width: '88px' }}
+                  value={activityLimitInput}
+                  onChange={(e) => setActivityLimitInput(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                  onBlur={() => {
+                    if (!activityLimitInput) {
+                      setActivityLimitInput('8');
+                      return;
+                    }
+                    setActivityLimitInput(String(activityLimit));
+                  }}
+                  placeholder="Limit"
+                />
+                <span className="admin-filter-pill">{periodLabel}</span>
+              </div>
             </div>
             <div className="admin-activity-list">
               {recentActivities.length === 0 && <p className="text-muted mb-0">Chưa có dữ liệu hoạt động.</p>}
@@ -319,6 +393,7 @@ const AdminHome = () => {
                 <div className="admin-activity-item" key={item.id}>
                   <strong>{item.title}</strong>
                   <small>{item.subtitle}</small>
+                  <small>{item.meta}</small>
                   <span>{item.tag}</span>
                 </div>
               ))}

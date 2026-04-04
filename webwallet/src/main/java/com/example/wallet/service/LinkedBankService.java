@@ -2,6 +2,7 @@ package com.example.wallet.service;
 
 import com.example.wallet.dto.LinkedBankRequest;
 import com.example.wallet.dto.LinkedBankResponse;
+import com.example.wallet.entity.Account;
 import com.example.wallet.entity.Bank;
 import com.example.wallet.entity.LinkedBank;
 import com.example.wallet.entity.UserAccount;
@@ -21,7 +22,6 @@ public class LinkedBankService {
 
     private final LinkedBankRepository linkedBankRepository;
     private final UserAccountRepository userAccountRepository;
-
     private final BankRepository bankRepository;
     
     public Bank addSupportedBank(Bank bank) {
@@ -80,6 +80,15 @@ public class LinkedBankService {
 
         LinkedBank saved = linkedBankRepository.save(linkedBank);
         return toResponse(saved);
+    }
+
+    @Transactional
+    public String deleteLinkedBank(String username, Integer linkedBankId) {
+        LinkedBank linkedBank = linkedBankRepository.findByIdAndUserAccount_Username(linkedBankId, username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy liên kết ngân hàng hoặc bạn không có quyền thao tác!"));
+
+        linkedBank.setStatus("INACTIVE");
+        return "SUCCESS";
     }
 
     private LinkedBankResponse toResponse(LinkedBank linkedBank) {

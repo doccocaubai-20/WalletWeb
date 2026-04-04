@@ -382,6 +382,7 @@ a {
 [data-theme='dark'] .wallet-transfer-hero-stat,
 [data-theme='dark'] .wallet-profile-summary-list div,
 [data-theme='dark'] .wallet-topup-amount-box,
+[data-theme='dark'] .wallet-linked-bank-card,
 [data-theme='dark'] .wallet-profile-modal,
 [data-theme='dark'] .wallet-profile-modal-head,
 [data-theme='dark'] .wallet-profile-modal-foot {
@@ -459,6 +460,30 @@ a {
 [data-theme='dark'] .wallet-dashboard-shell .btn-primary {
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
     border-color: rgba(129, 140, 248, 0.5);
+}
+
+[data-theme='dark'] .wallet-bank-status.active {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(74, 222, 128, 0.45);
+    color: #86efac;
+}
+
+[data-theme='dark'] .wallet-bank-status.inactive {
+    background: rgba(244, 63, 94, 0.2);
+    border-color: rgba(251, 113, 133, 0.45);
+    color: #fda4af;
+}
+
+[data-theme='dark'] .wallet-unlink-btn {
+    background: #0b1220;
+    border-color: rgba(251, 113, 133, 0.5);
+    color: #fda4af;
+}
+
+[data-theme='dark'] .wallet-unlink-btn:hover:not(:disabled) {
+    background: rgba(244, 63, 94, 0.2);
+    border-color: rgba(251, 113, 133, 0.75);
+    color: #fecdd3;
 }
 
 [data-theme='dark'] .admin-dashboard-shell {

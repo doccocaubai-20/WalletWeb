@@ -4,8 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.wallet.dto.TransactionHistoryDTO;
 import com.example.wallet.dto.MonthlyTransactionSummaryDTO;
+import com.example.wallet.dto.RecentTransactionsDTO;
 import com.example.wallet.dto.TransferDTO;
 import com.example.wallet.entity.Account;
 import com.example.wallet.entity.TransactionType;
@@ -176,6 +180,37 @@ public class TransactionService {
         return dto;
     }
 
+    public List<RecentTransactionsDTO> getRecentSystemTransactions(String window,int limit){
+        String normalizedWindow = (window == null ? "month" : window.trim().toLowerCase(Locale.ROOT));
+        int normalizedLimit = Math.max(1, Math.min(limit, 100));
+
+        LocalDateTime fromTime = switch (normalizedWindow){
+            case "day" -> LocalDateTime.now().minusDays(1);
+            case "week" -> LocalDateTime.now().minusDays(7);
+            default -> LocalDateTime.now().minusDays(30);
+        };
+
+        Pageable pageable = PageRequest.of(0, normalizedLimit);
+
+        return transactionsRepository   
+                .findRecentSystemTransactions(fromTime, pageable)
+                .getContent()
+                .stream()
+                .map(t -> {
+                    RecentTransactionsDTO dto = new RecentTransactionsDTO();
+                    dto.setTransactionCode(t.getTransactionCode());
+                    dto.setCreatedDate(t.getCreatedDate());
+                    dto.setAmount(t.getAmount());
+                    dto.setStatus(t.getStatus());
+                    dto.setDescription(t.getDescription());
+                    dto.setAccountNumber(t.getAccount() != null ? t.getAccount().getAccountNumber() : null);
+                    dto.setRelatedParty(t.getRelatedParty());
+                    dto.setType(t.getAmount() != null && t.getAmount().signum() >= 0 ? "IN" : "OUT");
+                    return dto;
+                })
+                .toList();
+        
+    }
 
 
 }

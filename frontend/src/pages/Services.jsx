@@ -192,6 +192,9 @@ const Services = () => {
                               <h5 className="mb-1">{service.serviceName}</h5>
                               <p className="mb-1 text-muted small">{service.category}</p>
                               <p className="mb-0 small">{service.description || 'Không có mô tả.'}</p>
+                              <div className="mt-2">
+                                <span className="badge text-bg-warning">Hot: {service.hotScore || 0}</span>
+                              </div>
                             </div>
                             <span className="badge text-bg-success">{formatVnd(service.price)}</span>
                           </div>

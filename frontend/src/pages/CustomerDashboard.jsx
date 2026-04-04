@@ -87,6 +87,28 @@ const CustomerDashboard = () => {
     };
   }, [monthlySummary, savingsData]);
 
+  const spendingDonutStyle = useMemo(() => {
+    const spent = Math.max(Number(monthlyInsights.outgoing || 0), 0);
+    const available = Math.max(Number(monthlyInsights.budget || 0) - spent, 0);
+    const budget = Math.max(Number(monthlyInsights.budget || 0), 0);
+
+    const total = budget + spent + available;
+    if (total <= 0) {
+      return {
+        background: 'conic-gradient(#6d28d9 0 33.333%, #3b82f6 33.333% 66.666%, #f59e0b 66.666% 100%)',
+      };
+    }
+
+    const budgetPct = (budget / total) * 100;
+    const spentPct = (spent / total) * 100;
+    const budgetEnd = budgetPct;
+    const spentEnd = budgetPct + spentPct;
+
+    return {
+      background: `conic-gradient(#6d28d9 0 ${budgetEnd}%, #3b82f6 ${budgetEnd}% ${spentEnd}%, #f59e0b ${spentEnd}% 100%)`,
+    };
+  }, [monthlyInsights.budget, monthlyInsights.outgoing]);
+
   const balanceLabel = isWalletLocked ? '••••••••' : (walletData?.balance || 0).toLocaleString('vi-VN');
   const accountNumber = walletData?.accountNumber || '----';
   const fullName = profileData?.people?.fullName || walletData?.ownerName || `Khách hàng ${firstName}`;
@@ -673,7 +695,7 @@ const CustomerDashboard = () => {
               </div>
 
               <div className="wallet-spending-grid">
-                <div className="wallet-spending-donut"></div>
+                <div className="wallet-spending-donut" style={spendingDonutStyle}></div>
                 <div className="wallet-spending-legend">
                   <p><span className="dot housing"></span> Ngân sách tháng <strong>{formatVnd(monthlyInsights.budget)}</strong></p>
                   <p><span className="dot transfer"></span> Đã chi tiêu <strong>{formatVnd(monthlyInsights.outgoing)}</strong></p>

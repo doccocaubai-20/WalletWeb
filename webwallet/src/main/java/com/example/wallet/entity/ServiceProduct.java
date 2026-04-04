@@ -22,6 +22,7 @@ public class ServiceProduct {
     private String category;
     private String description;
     private BigDecimal price;
+    private Integer hotScore = 0;
     private String status = "ACTIVE";
     private LocalDateTime createdDate = LocalDateTime.now();
 }
